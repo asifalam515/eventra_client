@@ -1,5 +1,4 @@
 import { ThemeProvider } from "@/components/theme-provider"
-import { HeroSection } from "@/components/ui/hero-section-shadcnui"
 import Footer from "@/components/ui/hover-footer"
 import Navbar from "@/components/ui/navbar"
 
@@ -11,7 +10,7 @@ export default function CommonLayout({
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
       <Navbar />
-      <HeroSection />
+
       <main>
         <ThemeProvider>{children}</ThemeProvider>
       </main>

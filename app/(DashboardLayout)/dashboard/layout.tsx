@@ -1,17 +1,19 @@
 import { ThemeProvider } from "@/components/theme-provider"
+import React from "react"
 
 export default function DashboardLayout({
-  children,
+  admin,
+  user,
+  moderator,
 }: Readonly<{
-  children: React.ReactNode
+  admin: React.ReactNode
+  user: React.ReactNode
+  moderator: React.ReactNode
 }>) {
+  const role = process.env.NEXT_PUBLIC_USER_ROLE || "USER"
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
-        <h1>Dashboard Header</h1>
-        <ThemeProvider>{children}</ThemeProvider>
-        <h1>Dashboard Footer</h1>
-      </body>
-    </html>
+    <ThemeProvider>
+      {role === "ADMIN" ? admin : role === "USER" ? user : moderator}
+    </ThemeProvider>
   )
 }

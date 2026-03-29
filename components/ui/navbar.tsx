@@ -3,13 +3,16 @@
 import {
   Calendar,
   Menu,
+  Moon,
   PlusCircle,
   Search,
   Settings,
+  Sun,
   Ticket,
   UserCircle,
   Zap,
 } from "lucide-react"
+import { useTheme } from "next-themes"
 import Link from "next/link"
 import * as React from "react"
 
@@ -41,7 +44,7 @@ export default function Navbar() {
   const [openSearch, setOpenSearch] = React.useState(false)
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Brand Logo */}
         <div className="flex items-center gap-8">
@@ -60,31 +63,28 @@ export default function Navbar() {
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
                 <NavigationMenuItem>
-                  <Link href="/" legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      Home
-                    </NavigationMenuLink>
-                  </Link>
+                  <NavigationMenuLink
+                    asChild
+                    className={navigationMenuTriggerStyle()}
+                  >
+                    <Link href="/">Home</Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link href="/events" legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      Explore Events
-                    </NavigationMenuLink>
-                  </Link>
+                  <NavigationMenuLink
+                    asChild
+                    className={navigationMenuTriggerStyle()}
+                  >
+                    <Link href="/events">Explore Events</Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link href="/dashboard" legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      Dashboard
-                    </NavigationMenuLink>
-                  </Link>
+                  <NavigationMenuLink
+                    asChild
+                    className={navigationMenuTriggerStyle()}
+                  >
+                    <Link href="/dashboard">Dashboard</Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
@@ -108,6 +108,7 @@ export default function Navbar() {
 
           {/* User Auth/Action Buttons */}
           <div className="hidden items-center gap-2 md:flex">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" asChild>
               <Link href="/login">Login</Link>
             </Button>
@@ -134,6 +135,40 @@ export default function Navbar() {
       {/* Global Search Dialog */}
       <SearchDialog open={openSearch} setOpen={setOpenSearch} />
     </header>
+  )
+}
+
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <Button variant="outline" size="icon" disabled>
+        <Sun className="size-4" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    )
+  }
+
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      aria-label="Toggle theme"
+    >
+      {resolvedTheme === "dark" ? (
+        <Sun className="size-4" />
+      ) : (
+        <Moon className="size-4" />
+      )}
+      <span className="sr-only">Toggle theme</span>
+    </Button>
   )
 }
 

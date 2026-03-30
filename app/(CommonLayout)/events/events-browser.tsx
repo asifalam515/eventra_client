@@ -26,6 +26,24 @@ interface EventsBrowserProps {
 
 const EVENTS_PER_PAGE = 5
 
+function normalizeEventStatus(
+  status?: EventStatus | string
+): EventStatus | undefined {
+  if (!status) return undefined
+
+  const normalized = status.toLowerCase()
+
+  if (
+    normalized === "upcoming" ||
+    normalized === "ongoing" ||
+    normalized === "completed"
+  ) {
+    return normalized
+  }
+
+  return undefined
+}
+
 export function EventsBrowser({ events }: EventsBrowserProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | EventStatus>("all")
@@ -83,12 +101,7 @@ export function EventsBrowser({ events }: EventsBrowserProps) {
         normalizedName.includes(normalizedSearch) ||
         normalizedDescription.includes(normalizedSearch)
 
-      const eventStatus =
-        event.eventStatus === "upcoming" ||
-        event.eventStatus === "ongoing" ||
-        event.eventStatus === "completed"
-          ? event.eventStatus
-          : "upcoming"
+      const eventStatus = normalizeEventStatus(event.eventStatus) || "upcoming"
 
       const matchesStatus =
         statusFilter === "all" ? true : eventStatus === statusFilter
@@ -253,11 +266,7 @@ export function EventsBrowser({ events }: EventsBrowserProps) {
                 name: event.name ?? "Untitled Event",
                 description: event.description ?? "No description available",
                 eventStatus:
-                  event.eventStatus === "upcoming" ||
-                  event.eventStatus === "ongoing" ||
-                  event.eventStatus === "completed"
-                    ? event.eventStatus
-                    : "upcoming",
+                  normalizeEventStatus(event.eventStatus) || "upcoming",
               }}
             />
           ))}

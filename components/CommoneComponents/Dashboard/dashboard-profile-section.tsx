@@ -17,19 +17,19 @@ export default function DashboardProfileSection({
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-background to-background/50 p-6">
+    <div>
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
             {title}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-slate-600">
             Welcome back, {user.name}! {subtitle}
           </p>
         </div>
 
         <div className="mb-8">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">
             Profile Information
           </h2>
           <ProfileCard />

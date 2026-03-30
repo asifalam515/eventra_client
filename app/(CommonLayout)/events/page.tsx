@@ -9,6 +9,7 @@ interface Event {
   location?: string
   venue?: string
   eventStatus?: "upcoming" | "ongoing" | "completed" | string
+  status?: "upcoming" | "ongoing" | "completed" | string
   fee?: string | number
   review?: number
   type?: string
@@ -26,7 +27,7 @@ const page = async () => {
     description: event.description,
     date: event.date,
     venue: event.venue || event.location,
-    eventStatus: event.eventStatus,
+    eventStatus: event.eventStatus || event.status,
     fee: event.fee,
     review: event.review,
     type: event.type,

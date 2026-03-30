@@ -1,5 +1,8 @@
+import { getParticipationsByEventIdAction } from "@/actions/participation"
 import DeleteEventButton from "@/components/CommoneComponents/Event/deleteEventButton"
 import JoinEventButton from "@/components/CommoneComponents/Event/joinEventButton"
+import PaidEventCheckoutButton from "@/components/CommoneComponents/Event/paidEventCheckoutButton"
+import ParticipantsList from "@/components/CommoneComponents/Event/participantsList"
 import { Button } from "@/components/ui/button"
 import jwt, { JwtPayload } from "jsonwebtoken"
 import {
@@ -105,6 +108,15 @@ const formatFee = (fee?: string | number) => {
   return fee
 }
 
+const getFeeAmount = (fee?: string | number) => {
+  if (typeof fee === "number") return fee
+  if (typeof fee === "string") {
+    const parsed = Number(fee)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  return 0
+}
+
 const formatDate = (date?: string) => {
   if (!date) return "Date not announced"
 
@@ -161,7 +173,10 @@ export default async function Page({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const event = await getEventById(id)
+  const [event, participations] = await Promise.all([
+    getEventById(id),
+    getParticipationsByEventIdAction(id),
+  ])
 
   const cookieStore = await cookies()
   const token = cookieStore.get("token")?.value
@@ -192,6 +207,8 @@ export default async function Page({
   }
 
   const status = statusConfig[event.eventStatus]
+  const feeAmount = getFeeAmount(event.fee)
+  const isPaidEvent = feeAmount > 0
   const canManage =
     (currentUserRole ? ADMIN_ROLES.has(currentUserRole) : false) ||
     Boolean(
@@ -272,7 +289,7 @@ export default async function Page({
                 Attendees
               </div>
               <p className="text-sm font-medium text-foreground">
-                {event.attendees ?? 0}
+                {participations.length || event.attendees || 0}
               </p>
             </div>
 
@@ -292,7 +309,14 @@ export default async function Page({
               <Link href="/events">Back to Events</Link>
             </Button>
 
-            <JoinEventButton eventId={event.id} />
+            {isPaidEvent ? (
+              <PaidEventCheckoutButton
+                eventId={event.id}
+                amountLabel={formatFee(event.fee)}
+              />
+            ) : (
+              <JoinEventButton eventId={event.id} />
+            )}
 
             {canManage && (
               <Button asChild variant="secondary">
@@ -309,6 +333,12 @@ export default async function Page({
               </Link>
             </Button>
           </div>
+
+          <ParticipantsList
+            eventId={event.id}
+            canManage={canManage}
+            initialParticipations={participations}
+          />
         </div>
       </div>
     </section>

@@ -1,3 +1,4 @@
+import DashboardShell from "@/components/DashboardComponents/dashboard-shell"
 import { UserProvider } from "@/components/providers/user-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { getSessionUser } from "@/lib/session-user"
@@ -30,7 +31,9 @@ export default async function DashboardLayout({
 
   return (
     <UserProvider initialUser={sessionUser}>
-      <ThemeProvider>{roleView}</ThemeProvider>
+      <ThemeProvider>
+        <DashboardShell role={role}>{roleView}</DashboardShell>
+      </ThemeProvider>
     </UserProvider>
   )
 }

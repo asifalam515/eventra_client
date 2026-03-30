@@ -10,10 +10,5 @@ export default function DashboardLayout({
   user: React.ReactNode
   moderator: React.ReactNode
 }>) {
-  const role = process.env.NEXT_PUBLIC_USER_ROLE || "USER"
-  return (
-    <ThemeProvider>
-      {role === "ADMIN" ? admin : role === "USER" ? user : moderator}
-    </ThemeProvider>
-  )
+  return <ThemeProvider>{admin}</ThemeProvider>
 }

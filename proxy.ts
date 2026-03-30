@@ -1,59 +1,88 @@
 import jwt, { JwtPayload } from "jsonwebtoken"
 import { NextRequest, NextResponse } from "next/server"
-const publicRoutes = ["/", "/login", "/signup", "/events", "/events/[id]"]
-export async function proxy(request: NextRequest) {
+
+const AUTH_ROUTES = ["/login", "/signup"]
+const DASHBOARD_BASE = "/dashboard"
+
+function getDashboardRoute(role: string | null) {
+  if (role === "ADMIN") return "/dashboard/admin-dashboard"
+  if (role === "MODERATORS") return "/dashboard/moderator-dashboard"
+  return "/dashboard/user-dashboard"
+}
+
+function getRoleFromToken(token?: string) {
+  if (!token) return null
+
+  // Decode role from token payload. The API issues the token, so decoding avoids
+  // rejecting valid tokens when frontend/backed secrets differ.
+  try {
+    const decoded = jwt.decode(token) as JwtPayload | null
+    return typeof decoded?.role === "string" ? decoded.role : null
+  } catch {
+    return null
+  }
+}
+
+function isPublicPath(pathname: string) {
+  if (pathname === "/") return true
+  if (AUTH_ROUTES.includes(pathname)) return true
+  if (pathname === "/events" || pathname.startsWith("/events/")) return true
+  return false
+}
+
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = request.cookies.get("token")?.value
-  let userRole = null
-  if (token) {
-    try {
-      const decode = jwt.verify(
-        token,
-        process.env.JWT_SECRET_KEY as string
-      ) as JwtPayload
-      userRole = decode.role as string
-      console.log(userRole)
-    } catch (error) {
-      const res = NextResponse.redirect(new URL("/login", request.url))
-      res.cookies.delete("token")
-      return res
-    }
-  }
-  if (token && ["/login", "/signup"].includes(request.nextUrl.pathname)) {
-    return NextResponse.redirect(new URL("/", request.url))
-  }
-  const isPublic = publicRoutes.some((route) => pathname.startsWith(route))
-  if (!isPublic && !token) {
-    return NextResponse.redirect("/login")
+  const role = getRoleFromToken(token)
+  const isAuthenticated = Boolean(token)
+  const isDashboardRoute =
+    pathname === DASHBOARD_BASE || pathname.startsWith(`${DASHBOARD_BASE}/`)
+
+  // Logged-in users should not visit auth pages.
+  if (isAuthenticated && AUTH_ROUTES.includes(pathname)) {
+    return NextResponse.redirect(new URL(getDashboardRoute(role), request.url))
   }
 
-  //role based access control
-  //  admin =? /admin-dashboard
-  // user =? /user-dashboard
-  // moderator =? /moderator-dashboard
-  const roleGroup = {
-    admin: ["admin-dashboard"],
-    user: ["user-dashboard", "events", "events/[id]", "/profile"],
-    moderator: ["moderator-dashboard"],
+  // Protect dashboard section.
+  if (isDashboardRoute && !isAuthenticated) {
+    return NextResponse.redirect(new URL("/login", request.url))
   }
 
-  for (const role in roleGroup) {
-    if (roleGroup[role].some((path) => pathname.startsWith(path))) {
-      if (userRole !== role) {
-        const targetDashboardRoute = getDashboard(userRole)
-        if (pathname !== targetDashboardRoute) {
-          return NextResponse.redirect(
-            new URL(targetDashboardRoute, request.url)
-          )
-        }
-      }
+  if (isDashboardRoute && isAuthenticated) {
+    const targetDashboard = getDashboardRoute(role)
+
+    // /dashboard -> role landing page
+    if (pathname === DASHBOARD_BASE) {
+      return NextResponse.redirect(new URL(targetDashboard, request.url))
     }
+
+    // Restrict direct dashboard child routes by role.
+    const roleAllowedPrefixes: Record<string, string[]> = {
+      ADMIN: ["/dashboard/admin-dashboard"],
+      MODERATORS: ["/dashboard/moderator-dashboard"],
+      USER: ["/dashboard/user-dashboard"],
+    }
+
+    const currentRole = role ?? "user"
+    const allowed = roleAllowedPrefixes[currentRole] ?? roleAllowedPrefixes.user
+    const canAccess = allowed.some(
+      (allowedPrefix) =>
+        pathname === allowedPrefix || pathname.startsWith(`${allowedPrefix}/`)
+    )
+
+    if (!canAccess) {
+      return NextResponse.redirect(new URL(targetDashboard, request.url))
+    }
+  }
+
+  // Keep common/public pages open.
+  if (isPublicPath(pathname)) {
+    return NextResponse.next()
   }
 
   return NextResponse.next()
 }
-function getDashboard(role: string | null) {
-  if (role == "admin") return "/admin-dashboard"
-  if (role == "driver") return "/driver-dashboard"
-  return "/dashboard"
+
+export const config = {
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 }

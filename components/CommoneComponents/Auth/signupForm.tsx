@@ -1,35 +1,49 @@
 "use client"
 
-import { loginAction, type LoginActionState } from "@/actions/auth"
+import { signupAction, type SignupActionState } from "@/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, LockKeyhole, Mail, X } from "lucide-react"
+import {
+  Eye,
+  EyeOff,
+  Image as ImageIcon,
+  LockKeyhole,
+  Mail,
+  User,
+  X,
+} from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useActionState, useEffect, useState } from "react"
 
 const AUTO_DISMISS_MS = 3500
 
-const LoginForm = () => {
+const SignupForm = () => {
   const router = useRouter()
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [photo, setPhoto] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const [progress, setProgress] = useState(100)
 
-  const initialState: LoginActionState = { status: "idle", message: "" }
-  const [state, formAction, pending] = useActionState(loginAction, initialState)
+  const initialState: SignupActionState = { status: "idle", message: "" }
+  const [state, formAction, pending] = useActionState(
+    signupAction,
+    initialState
+  )
 
   useEffect(() => {
-    // Only set up the timer if there's a message to show
     if (state.status === "idle" || !state.message) {
       return
     }
 
-    setIsVisible(true)
-    setProgress(100)
+    const showTimer = setTimeout(() => {
+      setIsVisible(true)
+      setProgress(100)
+    }, 0)
 
     const startTime = Date.now()
     const animationInterval = setInterval(() => {
@@ -43,15 +57,17 @@ const LoginForm = () => {
       }
     }, 30)
 
-    return () => clearInterval(animationInterval)
+    return () => {
+      clearTimeout(showTimer)
+      clearInterval(animationInterval)
+    }
   }, [state.status, state.message])
 
-  // Redirect to homepage on successful login
   useEffect(() => {
     if (state.status === "success") {
       const redirectTimer = setTimeout(() => {
         router.push("/")
-      }, 2000) // 2 second delay to show success message
+      }, 2000)
 
       return () => clearTimeout(redirectTimer)
     }
@@ -97,16 +113,35 @@ const LoginForm = () => {
           </div>
         </div>
       )}
+
       <div className="mb-6 space-y-1">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Welcome back
+          Create your account
         </h1>
         <p className="text-sm text-muted-foreground">
-          Sign in to manage your events, tickets, and dashboard.
+          Join Eventra and start managing events with ease.
         </p>
       </div>
 
       <form action={formAction} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Full name</Label>
+          <div className="relative">
+            <User className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="name"
+              name="name"
+              type="text"
+              autoComplete="name"
+              required
+              placeholder="Your full name"
+              className="pl-9"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="email">Email address</Label>
           <div className="relative">
@@ -126,25 +161,16 @@ const LoginForm = () => {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link
-              href="/forgot-password"
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
+          <Label htmlFor="password">Password</Label>
           <div className="relative">
             <LockKeyhole className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
+              autoComplete="new-password"
               required
-              placeholder="Enter your password"
+              placeholder="Create a strong password"
               className="pr-10 pl-9"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -164,22 +190,39 @@ const LoginForm = () => {
           </div>
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="photo">Photo URL (optional)</Label>
+          <div className="relative">
+            <ImageIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="photo"
+              name="photo"
+              type="url"
+              autoComplete="url"
+              placeholder="https://example.com/photo.jpg"
+              className="pl-9"
+              value={photo}
+              onChange={(e) => setPhoto(e.target.value)}
+            />
+          </div>
+        </div>
+
         <Button type="submit" className="h-10 w-full" disabled={pending}>
-          {pending ? "Signing in..." : "Sign in"}
+          {pending ? "Creating account..." : "Sign up"}
         </Button>
       </form>
 
       <p className="mt-5 text-center text-sm text-muted-foreground">
-        New to Eventra?{" "}
+        Already have an account?{" "}
         <Link
-          href="/signup"
+          href="/login"
           className="font-medium text-foreground hover:underline"
         >
-          Create an account
+          Sign in
         </Link>
       </p>
     </div>
   )
 }
 
-export default LoginForm
+export default SignupForm

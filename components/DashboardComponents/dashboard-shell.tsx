@@ -6,12 +6,14 @@ import {
   Activity,
   Calendar,
   LayoutDashboard,
+  Menu,
   Shield,
   Sparkles,
-  Users,
+  X,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 type DashboardShellProps = {
   role: string
@@ -35,6 +37,9 @@ export default function DashboardShell({
 }: DashboardShellProps) {
   const pathname = usePathname()
   const { user } = useUserContext()
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] =
+    useState(false)
 
   const commonLinks: NavItem[] = [
     {
@@ -57,11 +62,6 @@ export default function DashboardShell({
             label: "Admin Control",
             icon: Shield,
           },
-          {
-            href: "/dashboard/admin-dashboard",
-            label: "User Management",
-            icon: Users,
-          },
         ]
       : role === "MODERATOR" || role === "MODERATORS"
         ? [
@@ -81,84 +81,145 @@ export default function DashboardShell({
 
   const links = [...commonLinks, ...roleLinks]
 
+  const sidebar = (
+    <>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-2xl bg-linear-to-br from-cyan-500 to-blue-600 text-white shadow-lg">
+            <Sparkles className="size-5" />
+          </div>
+          <div className={isDesktopSidebarCollapsed ? "lg:hidden" : "block"}>
+            <p className="text-sm text-muted-foreground">Eventra</p>
+            <h2 className="text-base font-semibold text-foreground">
+              Dashboard
+            </h2>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          >
+            <X className="size-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="hidden lg:inline-flex"
+            onClick={() => setIsDesktopSidebarCollapsed((prev) => !prev)}
+          >
+            <Menu className="size-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-border/70 bg-background/80 p-3 shadow-sm">
+        <p className="text-xs text-muted-foreground">Signed in as</p>
+        <p className="truncate text-sm font-semibold text-foreground">
+          {user?.name || "User"}
+        </p>
+        <p className="truncate text-xs text-muted-foreground">
+          {user?.email || ""}
+        </p>
+      </div>
+
+      <nav className="space-y-2">
+        {links.map((item, index) => {
+          const Icon = item.icon
+          const active = isActive(pathname, item.href)
+
+          return (
+            <Link
+              key={`${item.href}-${index}`}
+              href={item.href}
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
+                active
+                  ? "bg-linear-to-r from-cyan-500 to-blue-600 text-white shadow-sm"
+                  : "text-muted-foreground hover:bg-background hover:text-foreground"
+              }`}
+            >
+              <Icon className="size-4 shrink-0" />
+              <span
+                className={isDesktopSidebarCollapsed ? "lg:hidden" : "block"}
+              >
+                {item.label}
+              </span>
+            </Link>
+          )
+        })}
+      </nav>
+
+      <div className="mt-auto rounded-2xl border border-border/70 bg-background/80 p-3 shadow-sm">
+        <p className="text-xs text-muted-foreground">Role</p>
+        <p className="text-sm font-semibold text-foreground">{role}</p>
+      </div>
+    </>
+  )
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-slate-50 via-cyan-50 to-blue-100">
-      <div className="pointer-events-none absolute top-10 -left-24 h-72 w-72 rounded-full bg-cyan-300/25 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-blue-400/20 blur-3xl" />
+    <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-background via-cyan-50/40 to-blue-100/40 dark:via-slate-950 dark:to-slate-900">
+      <div className="pointer-events-none absolute top-10 -left-24 h-72 w-72 rounded-full bg-cyan-300/20 blur-3xl dark:bg-cyan-700/20" />
+      <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-blue-400/15 blur-3xl dark:bg-blue-700/20" />
 
-      <div className="relative mx-auto flex w-full max-w-[1600px] gap-4 p-4 md:p-6">
-        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] w-72 shrink-0 rounded-3xl border border-white/60 bg-white/65 p-5 backdrop-blur-xl lg:flex lg:flex-col">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-2xl bg-linear-to-br from-cyan-500 to-blue-600 text-white shadow-lg">
-              <Sparkles className="size-5" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Eventra</p>
-              <h2 className="text-base font-semibold text-slate-900">
-                Dashboard
-              </h2>
-            </div>
-          </div>
+      {isMobileSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation overlay"
+          onClick={() => setIsMobileSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] lg:hidden"
+        />
+      )}
 
-          <div className="mb-6 rounded-2xl border border-slate-200/70 bg-white/80 p-3">
-            <p className="text-xs text-slate-500">Signed in as</p>
-            <p className="truncate text-sm font-semibold text-slate-800">
-              {user?.name || "User"}
-            </p>
-            <p className="truncate text-xs text-slate-500">
-              {user?.email || ""}
-            </p>
-          </div>
-
-          <nav className="space-y-2">
-            {links.map((item, index) => {
-              const Icon = item.icon
-              const active = isActive(pathname, item.href)
-
-              return (
-                <Link
-                  key={`${item.href}-${index}`}
-                  href={item.href}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
-                    active
-                      ? "bg-linear-to-r from-cyan-500 to-blue-600 text-white shadow"
-                      : "text-slate-700 hover:bg-white/80"
-                  }`}
-                >
-                  <Icon className="size-4" />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-          </nav>
-
-          <div className="mt-auto rounded-2xl border border-slate-200/70 bg-white/80 p-3">
-            <p className="text-xs text-slate-500">Role</p>
-            <p className="text-sm font-semibold text-slate-800">{role}</p>
-          </div>
+      <div className="relative mx-auto flex w-full max-w-400 gap-4 p-4 md:p-6">
+        <aside
+          className={`z-50 h-[calc(100vh-3rem)] shrink-0 rounded-3xl border border-border/70 bg-card/80 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 ${
+            isDesktopSidebarCollapsed ? "w-20" : "w-72"
+          } ${
+            isMobileSidebarOpen
+              ? "fixed top-6 left-4 w-[calc(100vw-2rem)]"
+              : "hidden lg:flex lg:flex-col"
+          }`}
+        >
+          {sidebar}
         </aside>
 
         <div className="min-w-0 flex-1">
-          <header className="mb-4 rounded-2xl border border-white/70 bg-white/70 p-4 backdrop-blur-xl md:mb-6 md:p-5">
+          <header className="mb-4 rounded-2xl border border-border/70 bg-card/75 p-4 shadow-sm backdrop-blur-xl md:mb-6 md:p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h1 className="text-xl font-semibold text-slate-900 md:text-2xl">
+                <h1 className="text-xl font-semibold text-foreground md:text-2xl">
                   Welcome back, {user?.name || "there"}
                 </h1>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-muted-foreground">
                   Manage your events, participants, and activity from one place.
                 </p>
               </div>
-              <Button
-                asChild
-                className="bg-linear-to-r from-cyan-500 to-blue-600 text-white"
-              >
-                <Link href="/create-event">Create Event</Link>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="lg:hidden"
+                  onClick={() => setIsMobileSidebarOpen(true)}
+                >
+                  <Menu className="size-4" /> Menu
+                </Button>
+                <Button
+                  asChild
+                  className="bg-linear-to-r from-cyan-500 to-blue-600 text-white"
+                >
+                  <Link href="/create-event">Create Event</Link>
+                </Button>
+              </div>
             </div>
           </header>
 
-          <main className="rounded-3xl border border-white/70 bg-white/70 p-4 backdrop-blur-xl md:p-6">
+          <main className="rounded-3xl border border-border/70 bg-card/75 p-4 shadow-sm backdrop-blur-xl md:p-6">
             {children}
           </main>
         </div>

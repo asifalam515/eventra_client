@@ -34,6 +34,27 @@ const EVENT_STATUS_OPTIONS: EventStatusOption[] = [
   "COMPLETED",
 ]
 
+const EVENT_STATUS_STYLES: Record<
+  EventStatusOption,
+  { badge: string; button: string }
+> = {
+  UPCOMING: {
+    badge: "bg-sky-100 text-sky-700",
+    button:
+      "bg-sky-600 text-white shadow-sm hover:bg-sky-700 focus-visible:ring-sky-300",
+  },
+  ONGOING: {
+    badge: "bg-amber-100 text-amber-700",
+    button:
+      "bg-amber-600 text-white shadow-sm hover:bg-amber-700 focus-visible:ring-amber-300",
+  },
+  COMPLETED: {
+    badge: "bg-emerald-100 text-emerald-700",
+    button:
+      "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 focus-visible:ring-emerald-300",
+  },
+}
+
 function normalizeEventStatus(status?: string): EventStatusOption {
   const normalized = status?.trim().toUpperCase()
 
@@ -59,6 +80,12 @@ function formatDate(value?: string) {
     day: "numeric",
     year: "numeric",
   }).format(parsed)
+}
+
+function formatStatusLabel(status: EventStatusOption) {
+  if (status === "UPCOMING") return "Upcoming"
+  if (status === "ONGOING") return "Ongoing"
+  return "Completed"
 }
 
 export default function AdminEventsPanel({
@@ -228,42 +255,42 @@ export default function AdminEventsPanel({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-slate-900">
+        <h2 className="text-2xl font-semibold text-foreground">
           Admin Events Management
         </h2>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           Filter events, fetch any event by ID, and delete inappropriate events.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
-          <p className="text-xs text-slate-500">Total Events</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur">
+          <p className="text-xs text-muted-foreground">Total Events</p>
+          <p className="mt-1 text-2xl font-semibold text-foreground">
             {events.length}
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
-          <p className="text-xs text-slate-500">Featured Events</p>
+        <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur">
+          <p className="text-xs text-muted-foreground">Featured Events</p>
           <p className="mt-1 text-2xl font-semibold text-amber-700">
             {featuredCount}
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
-          <p className="text-xs text-slate-500">Paid Events</p>
+        <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur sm:col-span-2 xl:col-span-1">
+          <p className="text-xs text-muted-foreground">Paid Events</p>
           <p className="mt-1 text-2xl font-semibold text-cyan-700">
             {paidCount}
           </p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white/85 p-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+      <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <Input
             value={filters.search}
             onChange={(e) => handleFilterChange("search", e.target.value)}
             placeholder="Search by title"
-            className="bg-white"
+            className="bg-background"
           />
 
           <Input
@@ -274,7 +301,7 @@ export default function AdminEventsPanel({
               handleFilterChange("page", Number(e.target.value) || 1)
             }
             placeholder="Page"
-            className="bg-white"
+            className="bg-background"
           />
 
           <Input
@@ -285,13 +312,13 @@ export default function AdminEventsPanel({
               handleFilterChange("limit", Number(e.target.value) || 10)
             }
             placeholder="Limit"
-            className="bg-white"
+            className="bg-background"
           />
 
           <select
             value={filters.type}
             onChange={(e) => handleFilterChange("type", e.target.value)}
-            className="h-10 rounded-md border border-input bg-white px-3 text-sm"
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
           >
             <option value="">All Types</option>
             <option value="PUBLIC">PUBLIC</option>
@@ -301,7 +328,7 @@ export default function AdminEventsPanel({
           <select
             value={filters.isFeatured}
             onChange={(e) => handleFilterChange("isFeatured", e.target.value)}
-            className="h-10 rounded-md border border-input bg-white px-3 text-sm"
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
           >
             <option value="">All Featured</option>
             <option value="true">Featured = true</option>
@@ -309,8 +336,12 @@ export default function AdminEventsPanel({
           </select>
         </div>
 
-        <div className="mt-3 flex gap-2">
-          <Button onClick={handleApplyFilters} disabled={isFetching}>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            onClick={handleApplyFilters}
+            disabled={isFetching}
+            className="flex-1 sm:flex-none"
+          >
             {isFetching ? "Filtering..." : "Apply Filters"}
           </Button>
           <Button
@@ -326,26 +357,28 @@ export default function AdminEventsPanel({
               setTimeout(() => handleApplyFilters(), 0)
             }}
             disabled={isFetching}
+            className="flex-1 sm:flex-none"
           >
             Reset
           </Button>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white/85 p-4">
+      <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur">
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="flex flex-1 items-center gap-2">
-            <Search className="size-4 text-slate-500" />
+            <Search className="size-4 text-muted-foreground" />
             <Input
               value={queryId}
               onChange={(e) => setQueryId(e.target.value)}
               placeholder="Fetch event by ID"
-              className="bg-white"
+              className="bg-background"
             />
           </div>
           <Button
             onClick={handleFindById}
             disabled={isFetching || !queryId.trim()}
+            className="w-full md:w-auto"
           >
             {isFetching ? "Searching..." : "Find Event"}
           </Button>
@@ -353,23 +386,31 @@ export default function AdminEventsPanel({
       </div>
 
       {selectedEvent && (
-        <div className="rounded-2xl border border-slate-200 bg-white/85 p-4">
+        <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="text-sm font-semibold text-foreground">
               Selected Event
             </h3>
-            <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">
+            <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
               {selectedEvent.type || "N/A"}
             </span>
           </div>
 
-          <div className="grid gap-1 text-sm text-slate-700">
+          <div className="grid gap-1 text-sm text-muted-foreground">
             <p>
               <span className="font-medium">Title:</span> {selectedEvent.title}
             </p>
             <p>
               <span className="font-medium">Event Status:</span>{" "}
-              {selectedEvent.status || "N/A"}
+              <span
+                className={`rounded-full px-2 py-1 text-xs ${
+                  EVENT_STATUS_STYLES[
+                    normalizeEventStatus(selectedEvent.status)
+                  ].badge
+                }`}
+              >
+                {formatStatusLabel(normalizeEventStatus(selectedEvent.status))}
+              </span>
             </p>
             <p>
               <span className="font-medium">Venue:</span>{" "}
@@ -388,23 +429,35 @@ export default function AdminEventsPanel({
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <select
-              value={normalizeEventStatus(selectedEvent.status)}
-              onChange={(e) =>
-                handleUpdateEventStatus(
-                  selectedEvent.id,
-                  e.target.value as EventStatusOption
-                )
-              }
-              disabled={isMutating}
-              className="h-10 rounded-md border border-input bg-white px-3 text-sm"
-            >
-              {EVENT_STATUS_OPTIONS.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+            <div className="rounded-xl border border-border/70 bg-muted/30 p-1">
+              <p className="mb-1 px-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                Update Event Status
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {EVENT_STATUS_OPTIONS.map((status) => {
+                  const active =
+                    normalizeEventStatus(selectedEvent.status) === status
+
+                  return (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() =>
+                        handleUpdateEventStatus(selectedEvent.id, status)
+                      }
+                      disabled={isMutating || active}
+                      className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-70 ${
+                        active
+                          ? EVENT_STATUS_STYLES[status].button
+                          : "bg-background text-muted-foreground ring-1 ring-border hover:bg-muted/40"
+                      }`}
+                    >
+                      {formatStatusLabel(status)}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
             {!selectedEvent.isFeatured && (
               <Button
@@ -429,16 +482,93 @@ export default function AdminEventsPanel({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/85">
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+      <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/80 shadow-sm backdrop-blur">
+        <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Calendar className="size-4" /> All Events
           </h3>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="grid gap-3 p-3 md:hidden">
+          {events.map((item) => (
+            <article
+              key={item.id}
+              className="rounded-xl border border-border/70 bg-background/70 p-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.type || "N/A"}
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-1 text-[11px] ${
+                    EVENT_STATUS_STYLES[normalizeEventStatus(item.status)].badge
+                  }`}
+                >
+                  {formatStatusLabel(normalizeEventStatus(item.status))}
+                </span>
+              </div>
+
+              <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <span>Fee: {item.fee ?? 0}</span>
+                <span>Date: {formatDate(item.date)}</span>
+                <span>Featured: {item.isFeatured ? "Yes" : "No"}</span>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <div className="inline-flex rounded-md border border-border bg-muted/30 p-0.5">
+                  {EVENT_STATUS_OPTIONS.map((status) => {
+                    const active = normalizeEventStatus(item.status) === status
+
+                    return (
+                      <button
+                        key={status}
+                        type="button"
+                        onClick={() => handleUpdateEventStatus(item.id, status)}
+                        disabled={isMutating || active}
+                        className={`rounded px-2 py-1 text-[11px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-70 ${
+                          active
+                            ? EVENT_STATUS_STYLES[status].button
+                            : "bg-transparent text-muted-foreground hover:bg-background"
+                        }`}
+                      >
+                        {status.slice(0, 3)}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {!item.isFeatured && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleFeatureEvent(item.id)}
+                    disabled={isMutating}
+                  >
+                    <Sparkles className="size-4" /> Feature
+                  </Button>
+                )}
+
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => handleDeleteEvent(item.id)}
+                  disabled={isMutating}
+                >
+                  <Trash2 className="size-4" /> Delete
+                </Button>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-muted/40 text-muted-foreground">
               <tr>
                 <th className="px-4 py-2 font-medium">Title</th>
                 <th className="px-4 py-2 font-medium">Type</th>
@@ -451,16 +581,24 @@ export default function AdminEventsPanel({
             </thead>
             <tbody>
               {events.map((item) => (
-                <tr key={item.id} className="border-t border-slate-100">
-                  <td className="px-4 py-3 font-medium text-slate-800">
+                <tr
+                  key={item.id}
+                  className="border-t border-border/60 transition-colors hover:bg-muted/20"
+                >
+                  <td className="px-4 py-3 font-medium text-foreground">
                     {item.title}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {item.type || "N/A"}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-sky-100 px-2 py-1 text-xs text-sky-700">
-                      {item.status || "N/A"}
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs ${
+                        EVENT_STATUS_STYLES[normalizeEventStatus(item.status)]
+                          .badge
+                      }`}
+                    >
+                      {formatStatusLabel(normalizeEventStatus(item.status))}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -469,34 +607,43 @@ export default function AdminEventsPanel({
                         <Star className="size-3" /> Yes
                       </span>
                     ) : (
-                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                      <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
                         No
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{item.fee ?? 0}</td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {item.fee ?? 0}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
                     {formatDate(item.date)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
-                      <select
-                        value={normalizeEventStatus(item.status)}
-                        onChange={(e) =>
-                          handleUpdateEventStatus(
-                            item.id,
-                            e.target.value as EventStatusOption
+                      <div className="inline-flex rounded-md border border-border bg-muted/30 p-0.5">
+                        {EVENT_STATUS_OPTIONS.map((status) => {
+                          const active =
+                            normalizeEventStatus(item.status) === status
+
+                          return (
+                            <button
+                              key={status}
+                              type="button"
+                              onClick={() =>
+                                handleUpdateEventStatus(item.id, status)
+                              }
+                              disabled={isMutating || active}
+                              className={`rounded px-2 py-1 text-[11px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-70 ${
+                                active
+                                  ? EVENT_STATUS_STYLES[status].button
+                                  : "bg-transparent text-muted-foreground hover:bg-background"
+                              }`}
+                            >
+                              {status.slice(0, 3)}
+                            </button>
                           )
-                        }
-                        disabled={isMutating}
-                        className="h-8 rounded-md border border-input bg-white px-2 text-xs"
-                      >
-                        {EVENT_STATUS_OPTIONS.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
+                        })}
+                      </div>
 
                       {!item.isFeatured && (
                         <Button
@@ -531,8 +678,8 @@ export default function AdminEventsPanel({
           <div
             className={`max-w-xs rounded-lg border px-4 py-3 text-sm shadow-lg backdrop-blur ${
               toast.type === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                : "border-red-200 bg-red-50 text-red-800"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/80 dark:bg-emerald-900/40 dark:text-emerald-100"
+                : "border-red-200 bg-red-50 text-red-800 dark:border-red-900/80 dark:bg-red-900/40 dark:text-red-100"
             }`}
           >
             {toast.message}

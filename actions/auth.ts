@@ -1,6 +1,8 @@
 "use server"
 
+import { normalizeToken } from "@/lib/token"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
 export type AuthActionState = {
   status: "idle" | "success" | "error"
@@ -57,16 +59,26 @@ export async function loginAction(
     }
 
     const result = await response.json()
-    const { token } = result.data
+    const token = normalizeToken(
+      result?.data?.token ??
+        result?.token ??
+        result?.data?.accessToken ??
+        result?.accessToken
+    )
+    if (!token) {
+      return {
+        status: "error",
+        message: "Login succeeded, but no valid token was returned by backend.",
+      }
+    }
     // Store token in a secure cookie (this is just a placeholder, implement securely)
     const cookieOptions = await cookies()
-    const isProduction = process.env.NODE_ENV === "production"
     cookieOptions.set({
       name: "token",
       value: token,
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
+      secure: false, //will update
+      sameSite: "lax", //will be update
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 1 week
     })
@@ -149,7 +161,12 @@ export async function signupAction(
     }
 
     const result = await response.json()
-    const token = result?.data?.token ?? result?.token
+    const token = normalizeToken(
+      result?.data?.token ??
+        result?.token ??
+        result?.data?.accessToken ??
+        result?.accessToken
+    )
 
     if (token) {
       const cookieOptions = await cookies()
@@ -173,4 +190,19 @@ export async function signupAction(
       message,
     }
   }
+}
+
+export async function logoutAction() {
+  const cookieStore = await cookies()
+  cookieStore.set({
+    name: "token",
+    value: "",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+    maxAge: 0,
+  })
+
+  redirect("/login")
 }

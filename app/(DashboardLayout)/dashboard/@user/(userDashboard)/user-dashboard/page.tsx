@@ -1,9 +1,10 @@
-const UserDashboardPage = () => {
+import DashboardProfileSection from "@/components/CommoneComponents/Dashboard/dashboard-profile-section"
+
+export default function UserDashboardPage() {
   return (
-    <div>
-      <h1>User Dashboard</h1>
-    </div>
+    <DashboardProfileSection
+      title="Dashboard"
+      subtitle="Here is your profile information."
+    />
   )
 }
-
-export default UserDashboardPage

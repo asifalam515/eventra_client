@@ -1,7 +1,10 @@
+import { UserProvider } from "@/components/providers/user-provider"
 import { ThemeProvider } from "@/components/theme-provider"
+import { getSessionUser } from "@/lib/session-user"
+import { redirect } from "next/navigation"
 import React from "react"
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   admin,
   user,
   moderator,
@@ -10,5 +13,24 @@ export default function DashboardLayout({
   user: React.ReactNode
   moderator: React.ReactNode
 }>) {
-  return <ThemeProvider>{admin}</ThemeProvider>
+  const sessionUser = await getSessionUser()
+
+  if (!sessionUser) {
+    redirect("/login")
+  }
+
+  const role = sessionUser?.role?.toUpperCase() || "USER"
+
+  const roleView =
+    role === "ADMIN"
+      ? admin
+      : role === "MODERATOR" || role === "MODERATORS"
+        ? moderator
+        : user
+
+  return (
+    <UserProvider initialUser={sessionUser}>
+      <ThemeProvider>{roleView}</ThemeProvider>
+    </UserProvider>
+  )
 }

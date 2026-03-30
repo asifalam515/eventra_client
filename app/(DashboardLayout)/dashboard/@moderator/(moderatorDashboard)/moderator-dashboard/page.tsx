@@ -1,9 +1,10 @@
-const ModeratorDashboardPage = () => {
+import DashboardProfileSection from "@/components/CommoneComponents/Dashboard/dashboard-profile-section"
+
+export default function ModeratorDashboardPage() {
   return (
-    <div>
-      <h1>Moderator Dashboard</h1>
-    </div>
+    <DashboardProfileSection
+      title="Moderator Dashboard"
+      subtitle="You have moderator privileges."
+    />
   )
 }
-
-export default ModeratorDashboardPage

@@ -1,4 +1,4 @@
-import { EventsBrowser } from "@/app/(CommonLayout)/events/events-browser"
+import { EventsBrowser } from "./events-browser"
 
 interface Event {
   id: string

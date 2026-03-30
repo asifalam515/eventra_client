@@ -170,7 +170,8 @@ export default function Footer() {
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button size="lg" className="w-full gap-2 sm:w-auto">
-              Create an Event <ArrowRight className="h-4 w-4" />
+              <Link href="/create-event">Create Event</Link>{" "}
+              <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
               size="lg"

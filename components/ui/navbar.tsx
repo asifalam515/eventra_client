@@ -1,12 +1,17 @@
 "use client"
 
+import { logoutAction } from "@/actions/auth"
+import { useUserContext } from "@/components/providers/user-provider"
 import {
   Calendar,
+  ChevronDown,
+  LogOut,
   Menu,
   Moon,
   PlusCircle,
   Search,
   Settings,
+  ShieldCheck,
   Sun,
   Ticket,
   UserCircle,
@@ -34,6 +39,7 @@ import {
 } from "@/components/ui/navigation-menu"
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -41,7 +47,30 @@ import {
 } from "@/components/ui/sheet"
 
 export default function Navbar() {
+  const { user } = useUserContext()
   const [openSearch, setOpenSearch] = React.useState(false)
+  const [openProfile, setOpenProfile] = React.useState(false)
+
+  React.useEffect(() => {
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!(event.target instanceof HTMLElement)) return
+      if (!event.target.closest("[data-profile-menu]")) {
+        setOpenProfile(false)
+      }
+    }
+
+    window.addEventListener("mousedown", closeOnOutsideClick)
+    return () => window.removeEventListener("mousedown", closeOnOutsideClick)
+  }, [])
+
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "U"
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
@@ -109,13 +138,118 @@ export default function Navbar() {
           {/* User Auth/Action Buttons */}
           <div className="hidden items-center gap-2 md:flex">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button size="sm" className="gap-2 shadow-md">
-              <PlusCircle className="size-4" />
-              <span>Create Event</span>
-            </Button>
+
+            {user ? (
+              <div className="relative" data-profile-menu>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-2"
+                  onClick={() => setOpenProfile((prev) => !prev)}
+                  aria-expanded={openProfile}
+                  aria-haspopup="menu"
+                >
+                  {user.photo ? (
+                    <img
+                      src={user.photo}
+                      alt={`${user.name} profile`}
+                      className="size-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="inline-flex size-6 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                      {initials}
+                    </span>
+                  )}
+                  <span className="max-w-28 truncate text-sm">{user.name}</span>
+                  <ChevronDown className="size-4" />
+                </Button>
+
+                {openProfile && (
+                  <div
+                    className="absolute top-11 right-0 z-50 w-72 rounded-xl border border-border/70 bg-background p-3 shadow-xl"
+                    role="menu"
+                  >
+                    <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-2">
+                      {user.photo ? (
+                        <img
+                          src={user.photo}
+                          alt={`${user.name} profile`}
+                          className="size-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="inline-flex size-10 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
+                          {initials}
+                        </span>
+                      )}
+
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {user.name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {user.email || "No email"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 rounded-lg border border-border/60 px-3 py-2 text-xs text-muted-foreground">
+                      <p className="flex items-center gap-1.5">
+                        <ShieldCheck className="size-3.5" />
+                        Role: {user.role || "USER"}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 grid gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="justify-start"
+                      >
+                        <Link href="/create-event">
+                          <PlusCircle className="mr-2 size-4" /> Create Event
+                        </Link>
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="justify-start"
+                      >
+                        <Link href="/dashboard">
+                          <UserCircle className="mr-2 size-4" /> Profile
+                          Dashboard
+                        </Link>
+                      </Button>
+
+                      <form action={logoutAction}>
+                        <Button
+                          type="submit"
+                          variant="destructive"
+                          size="sm"
+                          className="w-full justify-start"
+                        >
+                          <LogOut className="mr-2 size-4" /> Logout
+                        </Button>
+                      </form>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button size="sm" className="gap-2 shadow-md" asChild>
+                  <Link href="/create-event">
+                    <PlusCircle className="size-4" />
+                    <span>Create Event</span>
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu */}
@@ -173,6 +307,16 @@ function ThemeToggle() {
 }
 
 function MobileMenu() {
+  const { user } = useUserContext()
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "U"
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -202,18 +346,77 @@ function MobileMenu() {
 
           <hr />
 
-          <div className="grid gap-2">
-            <Button asChild variant="outline" className="justify-start gap-2">
-              <Link href="/login">
-                <UserCircle className="size-4" /> Login
-              </Link>
-            </Button>
-            <Button asChild className="justify-start gap-2">
-              <Link href="/register">
-                <PlusCircle className="size-4" /> Get Started
-              </Link>
-            </Button>
-          </div>
+          {user ? (
+            <div className="grid gap-3">
+              <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/40 p-3">
+                {user.photo ? (
+                  <img
+                    src={user.photo}
+                    alt={`${user.name} profile`}
+                    className="size-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="inline-flex size-10 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
+                    {initials}
+                  </span>
+                )}
+
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{user.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {user.email || "No email"}
+                  </p>
+                </div>
+              </div>
+
+              <SheetClose asChild>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="justify-start gap-2"
+                >
+                  <Link href="/create-event">
+                    <PlusCircle className="size-4" /> Create Event
+                  </Link>
+                </Button>
+              </SheetClose>
+
+              <SheetClose asChild>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="justify-start gap-2"
+                >
+                  <Link href="/dashboard">
+                    <UserCircle className="size-4" /> Profile
+                  </Link>
+                </Button>
+              </SheetClose>
+
+              <form action={logoutAction}>
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  className="w-full justify-start gap-2"
+                >
+                  <LogOut className="size-4" /> Logout
+                </Button>
+              </form>
+            </div>
+          ) : (
+            <div className="grid gap-2">
+              <Button asChild variant="outline" className="justify-start gap-2">
+                <Link href="/login">
+                  <UserCircle className="size-4" /> Login
+                </Link>
+              </Button>
+              <Button asChild className="justify-start gap-2">
+                <Link href="/signup">
+                  <PlusCircle className="size-4" /> Get Started
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>

@@ -1,4 +1,7 @@
+import DeleteEventButton from "@/components/CommoneComponents/Event/deleteEventButton"
+import JoinEventButton from "@/components/CommoneComponents/Event/joinEventButton"
 import { Button } from "@/components/ui/button"
+import jwt, { JwtPayload } from "jsonwebtoken"
 import {
   Calendar,
   Clock,
@@ -8,6 +11,7 @@ import {
   Tag,
   Users,
 } from "lucide-react"
+import { cookies } from "next/headers"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -28,6 +32,11 @@ interface ApiEvent {
   review?: number
   type?: string
   attendees?: number
+  creatorId?: string
+  creator?: {
+    id?: string
+    _id?: string
+  }
 }
 
 interface EventDetails {
@@ -42,7 +51,10 @@ interface EventDetails {
   review?: number
   type?: string
   attendees?: number
+  creatorId?: string
 }
+
+const ADMIN_ROLES = new Set(["ADMIN", "SUPER_ADMIN", "MODERATOR", "MODERATORS"])
 
 const statusConfig: Record<EventStatus, { label: string; color: string }> = {
   upcoming: {
@@ -83,6 +95,7 @@ const normalizeEvent = (event: ApiEvent): EventDetails | null => {
     review: event.review,
     type: event.type,
     attendees: event.attendees,
+    creatorId: event.creatorId || event.creator?.id || event.creator?._id,
   }
 }
 
@@ -150,11 +163,40 @@ export default async function Page({
   const { id } = await params
   const event = await getEventById(id)
 
+  const cookieStore = await cookies()
+  const token = cookieStore.get("token")?.value
+
+  let currentUserId: string | null = null
+  let currentUserRole: string | null = null
+
+  if (token) {
+    try {
+      const normalizedToken = token.replace(/^Bearer\s+/i, "").trim()
+      const decoded = jwt.decode(normalizedToken) as JwtPayload | null
+      if (decoded) {
+        currentUserId =
+          (decoded.id as string) ||
+          (decoded.userId as string) ||
+          (decoded.sub as string) ||
+          null
+        currentUserRole =
+          typeof decoded.role === "string" ? decoded.role.toUpperCase() : null
+      }
+    } catch {
+      // Keep anonymous defaults when token decoding fails.
+    }
+  }
+
   if (!event) {
     notFound()
   }
 
   const status = statusConfig[event.eventStatus]
+  const canManage =
+    (currentUserRole ? ADMIN_ROLES.has(currentUserRole) : false) ||
+    Boolean(
+      currentUserId && event.creatorId && currentUserId === event.creatorId
+    )
 
   return (
     <section className="w-full">
@@ -249,6 +291,16 @@ export default async function Page({
             <Button asChild>
               <Link href="/events">Back to Events</Link>
             </Button>
+
+            <JoinEventButton eventId={event.id} />
+
+            {canManage && (
+              <Button asChild variant="secondary">
+                <Link href={`/events/${event.id}/edit`}>Edit Event</Link>
+              </Button>
+            )}
+
+            {canManage && <DeleteEventButton eventId={event.id} />}
 
             <Button asChild variant="outline">
               <Link href="/dashboard">

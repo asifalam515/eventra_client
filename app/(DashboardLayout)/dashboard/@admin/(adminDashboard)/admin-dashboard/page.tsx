@@ -1,9 +1,10 @@
-const page = () => {
+import DashboardProfileSection from "@/components/CommoneComponents/Dashboard/dashboard-profile-section"
+
+export default function AdminDashboardPage() {
   return (
-    <div>
-      <h1>Admin Dashboard</h1>
-    </div>
+    <DashboardProfileSection
+      title="Admin Dashboard"
+      subtitle="You have administrator privileges."
+    />
   )
 }
-
-export default page

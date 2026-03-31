@@ -22,6 +22,7 @@ interface EventItem {
 
 interface EventsBrowserProps {
   events: EventItem[]
+  initialSearchTerm?: string
 }
 
 const EVENTS_PER_PAGE = 5
@@ -44,8 +45,11 @@ function normalizeEventStatus(
   return undefined
 }
 
-export function EventsBrowser({ events }: EventsBrowserProps) {
-  const [searchTerm, setSearchTerm] = useState("")
+export function EventsBrowser({
+  events,
+  initialSearchTerm = "",
+}: EventsBrowserProps) {
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm)
   const [statusFilter, setStatusFilter] = useState<"all" | EventStatus>("all")
   const [typeFilter, setTypeFilter] = useState("all")
   const [feeRange, setFeeRange] = useState<{ min: number; max: number } | null>(

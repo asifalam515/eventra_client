@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -48,6 +49,7 @@ import {
 
 export default function Navbar() {
   const { user } = useUserContext()
+  const router = useRouter()
   const [openSearch, setOpenSearch] = React.useState(false)
   const [openProfile, setOpenProfile] = React.useState(false)
   const createEventHref = user
@@ -64,6 +66,19 @@ export default function Navbar() {
 
     window.addEventListener("mousedown", closeOnOutsideClick)
     return () => window.removeEventListener("mousedown", closeOnOutsideClick)
+  }, [])
+
+  React.useEffect(() => {
+    const handleSearchShortcut = (event: KeyboardEvent) => {
+      const isCmdK = (event.metaKey || event.ctrlKey) && event.key === "k"
+      if (!isCmdK) return
+
+      event.preventDefault()
+      setOpenSearch((prev) => !prev)
+    }
+
+    window.addEventListener("keydown", handleSearchShortcut)
+    return () => window.removeEventListener("keydown", handleSearchShortcut)
   }, [])
 
   const initials = user?.name
@@ -270,7 +285,15 @@ export default function Navbar() {
       </div>
 
       {/* Global Search Dialog */}
-      <SearchDialog open={openSearch} setOpen={setOpenSearch} />
+      <SearchDialog
+        open={openSearch}
+        setOpen={setOpenSearch}
+        onNavigate={(href) => {
+          setOpenSearch(false)
+          router.push(href)
+        }}
+        isAuthenticated={Boolean(user)}
+      />
     </header>
   )
 }
@@ -429,25 +452,86 @@ function MobileMenu() {
 function SearchDialog({
   open,
   setOpen,
+  onNavigate,
+  isAuthenticated,
 }: {
   open: boolean
   setOpen: (o: boolean) => void
+  onNavigate: (href: string) => void
+  isAuthenticated: boolean
 }) {
+  const [query, setQuery] = React.useState("")
+
+  const goToEventSearch = React.useCallback(
+    (searchValue: string) => {
+      const normalized = searchValue.trim()
+      if (!normalized) {
+        onNavigate("/events")
+        return
+      }
+
+      onNavigate(`/events?search=${encodeURIComponent(normalized)}`)
+    },
+    [onNavigate]
+  )
+
+  React.useEffect(() => {
+    if (!open) setQuery("")
+  }, [open])
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Search events, organizers, or categories..." />
+      <CommandInput
+        value={query}
+        onValueChange={setQuery}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault()
+            goToEventSearch(query)
+          }
+        }}
+        placeholder="Search events, organizers, or categories..."
+      />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
+        {query.trim() ? (
+          <CommandGroup heading="Search">
+            <CommandItem
+              className="cursor-pointer"
+              onSelect={() => goToEventSearch(query)}
+            >
+              <Search className="mr-2 h-4 w-4" />
+              <span>Search events for &quot;{query.trim()}&quot;</span>
+            </CommandItem>
+          </CommandGroup>
+        ) : null}
         <CommandGroup heading="Quick Access">
-          <CommandItem className="cursor-pointer">
+          <CommandItem
+            className="cursor-pointer"
+            onSelect={() => onNavigate("/events")}
+          >
             <Calendar className="mr-2 h-4 w-4" />
-            <span>Public Free Events</span>
+            <span>Browse Events</span>
           </CommandItem>
-          <CommandItem className="cursor-pointer">
+          <CommandItem
+            className="cursor-pointer"
+            onSelect={() =>
+              onNavigate(
+                isAuthenticated ? "/dashboard" : "/login?redirect=%2Fdashboard"
+              )
+            }
+          >
             <Ticket className="mr-2 h-4 w-4" />
             <span>My Registered Events</span>
           </CommandItem>
-          <CommandItem className="cursor-pointer">
+          <CommandItem
+            className="cursor-pointer"
+            onSelect={() =>
+              onNavigate(
+                isAuthenticated ? "/dashboard" : "/login?redirect=%2Fdashboard"
+              )
+            }
+          >
             <Settings className="mr-2 h-4 w-4" />
             <span>Account Settings</span>
           </CommandItem>

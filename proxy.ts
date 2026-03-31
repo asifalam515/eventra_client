@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 const AUTH_ROUTES = ["/login", "/signup"]
 const DASHBOARD_BASE = "/dashboard"
+const CREATE_EVENT_PATH = "/create-event"
 
 function getDashboardRoute(role: string | null) {
   if (role === "ADMIN") return "/dashboard/admin-dashboard"
@@ -37,6 +38,9 @@ export function proxy(request: NextRequest) {
   const isAuthenticated = Boolean(token)
   const isDashboardRoute =
     pathname === DASHBOARD_BASE || pathname.startsWith(`${DASHBOARD_BASE}/`)
+  const isCreateEventRoute =
+    pathname === CREATE_EVENT_PATH ||
+    pathname.startsWith(`${CREATE_EVENT_PATH}/`)
 
   // Logged-in users should not visit auth pages.
   if (isAuthenticated && AUTH_ROUTES.includes(pathname)) {
@@ -46,6 +50,13 @@ export function proxy(request: NextRequest) {
   // Protect dashboard section.
   if (isDashboardRoute && !isAuthenticated) {
     return NextResponse.redirect(new URL("/login", request.url))
+  }
+
+  // Protect event creation route.
+  if (isCreateEventRoute && !isAuthenticated) {
+    return NextResponse.redirect(
+      new URL(`/login?redirect=${encodeURIComponent(pathname)}`, request.url)
+    )
   }
 
   if (isDashboardRoute && isAuthenticated) {

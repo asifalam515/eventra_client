@@ -16,8 +16,18 @@ interface Event {
   attendees?: number
 }
 
-const page = async () => {
-  const data = await fetch("http://localhost:5000/api/v1/events", {
+const page = async ({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) => {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const rawSearch = resolvedSearchParams?.search
+  const initialSearchTerm = Array.isArray(rawSearch)
+    ? rawSearch[0] || ""
+    : (rawSearch ?? "")
+
+  const data = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
     cache: "no-store",
   })
   const events = await data.json()
@@ -45,7 +55,7 @@ const page = async () => {
         </p>
       </div>
 
-      <EventsBrowser events={eventList} />
+      <EventsBrowser events={eventList} initialSearchTerm={initialSearchTerm} />
     </div>
   )
 }

@@ -6,13 +6,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, LockKeyhole, Mail, X } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useActionState, useEffect, useState } from "react"
 
 const AUTO_DISMISS_MS = 3500
 
 const LoginForm = () => {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -49,13 +50,17 @@ const LoginForm = () => {
   // Redirect to homepage on successful login
   useEffect(() => {
     if (state.status === "success") {
+      const redirectTarget = searchParams.get("redirect")
+      const safeRedirect =
+        redirectTarget && redirectTarget.startsWith("/") ? redirectTarget : "/"
+
       const redirectTimer = setTimeout(() => {
-        router.push("/")
+        router.push(safeRedirect)
       }, 2000) // 2 second delay to show success message
 
       return () => clearTimeout(redirectTimer)
     }
-  }, [state.status, router])
+  }, [state.status, router, searchParams])
 
   const dismissAlert = () => {
     setIsVisible(false)

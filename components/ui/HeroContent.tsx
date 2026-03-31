@@ -1,22 +1,27 @@
 "use client"
 import { motion, type Variants } from "framer-motion"
 import { ArrowRight, Calendar, MapPin, Star, Ticket, Users } from "lucide-react"
+import Link from "next/link"
 import { Button } from "./button"
-// In a real scenario, this data would be passed as props fetched from your database
-// where the Admin has flagged an event as "Featured"
-const featuredEvent = {
-  title: "NextGen SaaS Founders Summit",
-  date: "October 15-17, 2026",
-  location: "San Francisco & Virtual",
-  description:
-    "Join industry leaders, visionary founders, and top-tier investors for a three-day immersive experience exploring the future of cloud software and AI.",
-  organizer: "Eventra Originals",
-  fee: "Public Paid",
-  price: "$299",
-  attendees: "1,200+",
+
+export type HeroFeaturedEvent = {
+  id: string
+  title: string
+  date: string
+  location: string
+  description: string
+  organizer: string
+  feeLabel: string
+  priceLabel: string
+  attendeesLabel: string
 }
 
-const HeroContent = () => {
+interface HeroContentProps {
+  featuredEvent: HeroFeaturedEvent
+  ctaHref: string
+}
+
+const HeroContent = ({ featuredEvent, ctaHref }: HeroContentProps) => {
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -36,6 +41,14 @@ const HeroContent = () => {
       transition: { duration: 0.5, ease: "easeOut" },
     },
   }
+
+  const titleWords = featuredEvent.title.trim().split(/\s+/)
+  const hasEnoughWords = titleWords.length > 2
+  const leadingTitle = hasEnoughWords
+    ? titleWords.slice(0, -2).join(" ")
+    : featuredEvent.title
+  const highlightedTitle = hasEnoughWords ? titleWords.slice(-2).join(" ") : ""
+
   return (
     <motion.div
       variants={containerVariants}
@@ -56,10 +69,15 @@ const HeroContent = () => {
         variants={itemVariants}
         className="mb-6 max-w-4xl text-5xl font-extrabold tracking-tight md:text-7xl"
       >
-        {featuredEvent.title.split(" ").slice(0, -2).join(" ")}{" "}
-        <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-          {featuredEvent.title.split(" ").slice(-2).join(" ")}
-        </span>
+        {leadingTitle}
+        {highlightedTitle ? (
+          <>
+            {" "}
+            <span className="bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              {highlightedTitle}
+            </span>
+          </>
+        ) : null}
       </motion.h1>
 
       {/* Event Meta Data (Date & Location) */}
@@ -94,7 +112,7 @@ const HeroContent = () => {
           size="lg"
           className="h-12 gap-2 px-8 text-base shadow-lg shadow-primary/25 transition-all hover:shadow-primary/40"
         >
-          Secure Your Spot
+          <Link href={ctaHref}>Secure Your Spot</Link>
           <ArrowRight className="h-4 w-4" />
         </Button>
         <Button
@@ -102,7 +120,7 @@ const HeroContent = () => {
           variant="outline"
           className="h-12 bg-background/50 px-8 text-base backdrop-blur-sm"
         >
-          View Full Details
+          <Link href={ctaHref}>View Full Details</Link>
         </Button>
       </motion.div>
 
@@ -114,7 +132,7 @@ const HeroContent = () => {
         <div className="flex flex-col items-center justify-center gap-1">
           <Users className="mb-2 h-5 w-5 text-primary" />
           <div className="text-xl font-bold text-foreground">
-            {featuredEvent.attendees}
+            {featuredEvent.attendeesLabel}
           </div>
           <div className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
             Expected
@@ -124,10 +142,10 @@ const HeroContent = () => {
         <div className="flex flex-col items-center justify-center gap-1">
           <Ticket className="mb-2 h-5 w-5 text-primary" />
           <div className="text-xl font-bold text-foreground">
-            {featuredEvent.price}
+            {featuredEvent.priceLabel}
           </div>
           <div className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            {featuredEvent.fee}
+            {featuredEvent.feeLabel}
           </div>
         </div>
 

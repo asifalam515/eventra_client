@@ -143,7 +143,7 @@ const formatDate = (date?: string) => {
 async function getEventById(id: string): Promise<EventDetails | null> {
   try {
     const detailResponse = await fetch(
-      `http://localhost:5000/api/v1/events/${id}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/events/${id}`,
       {
         cache: "no-store",
       }
@@ -159,9 +159,12 @@ async function getEventById(id: string): Promise<EventDetails | null> {
   }
 
   try {
-    const listResponse = await fetch("http://localhost:5000/api/v1/events", {
-      cache: "no-store",
-    })
+    const listResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/events`,
+      {
+        cache: "no-store",
+      }
+    )
 
     if (!listResponse.ok) return null
 
@@ -191,6 +194,7 @@ export default async function Page({
 
   const cookieStore = await cookies()
   const token = cookieStore.get("token")?.value
+  const isAuthenticated = Boolean(token)
 
   let currentUserId: string | null = null
   let currentUserRole: string | null = null
@@ -236,6 +240,11 @@ export default async function Page({
         item.status?.trim().toUpperCase() === "APPROVED"
     )
   )
+  const eventPath = `/events/${event.id}`
+  const loginForEventHref = `/login?redirect=${encodeURIComponent(eventPath)}`
+  const dashboardHref = isAuthenticated
+    ? "/dashboard"
+    : "/login?redirect=%2Fdashboard"
 
   return (
     <section className="w-full">
@@ -332,12 +341,26 @@ export default async function Page({
             </Button>
 
             {isPaidEvent ? (
-              <PaidEventCheckoutButton
-                eventId={event.id}
-                amountLabel={formatFee(event.fee)}
-              />
-            ) : (
+              isAuthenticated ? (
+                <PaidEventCheckoutButton
+                  eventId={event.id}
+                  amountLabel={formatFee(event.fee)}
+                />
+              ) : (
+                <Button asChild>
+                  <Link href={loginForEventHref}>
+                    <DollarSign className="size-4" /> Pay {formatFee(event.fee)}
+                  </Link>
+                </Button>
+              )
+            ) : isAuthenticated ? (
               <JoinEventButton eventId={event.id} />
+            ) : (
+              <Button asChild>
+                <Link href={loginForEventHref}>
+                  <Users className="size-4" /> Join Event
+                </Link>
+              </Button>
             )}
 
             {canManage && (
@@ -349,7 +372,7 @@ export default async function Page({
             {canManage && <DeleteEventButton eventId={event.id} />}
 
             <Button asChild variant="outline">
-              <Link href="/dashboard">
+              <Link href={dashboardHref}>
                 <Tag className="size-4" />
                 View Dashboard
               </Link>

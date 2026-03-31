@@ -1,3 +1,4 @@
+import { CallToAction } from "@/components/ui/cta-3"
 import { HeroSection } from "@/components/ui/hero-section-shadcnui"
 import HomeEventsSlider, {
   type HomeEventSlide,
@@ -104,6 +105,7 @@ const page = async () => {
         </div>
 
         <HomeEventsSlider events={eventList} />
+        <CallToAction></CallToAction>
       </section>
     </div>
   )

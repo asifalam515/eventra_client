@@ -1,182 +1,72 @@
 # Eventra Client
 
-Eventra Client is a modern event discovery and management frontend built with Next.js App Router, React 19, TypeScript, Tailwind CSS v4, and shadcn-style UI primitives. It provides a public browsing experience for events, detailed event pages, authentication UI, and role-based dashboard route structure.
+## Project Description
 
-## Highlights
+Eventra Client is a modern event discovery and event management frontend built with Next.js App Router. It provides public event browsing, event details, authentication flows, and role-based dashboard experiences for admin, moderator, and user roles.
 
-- Event listing page with advanced client-side filtering
-- Filters for search, event status, event type, and fee range
-- Pagination with fixed page size (5 events per page)
-- Event detail page with graceful API fallback strategy
-- Polished login page and reusable login form with server action integration
-- Role-based dashboard route groups for admin, moderator, and user
-- Custom not found experience and reusable UI component library
+## Live URLs
 
-## Tech Stack
+- Frontend (Vercel): https://eventra-client.vercel.app/
+- Backend API: https://eventraserver.vercel.app
+- Local Frontend: http://localhost:3000
+- Local Backend: http://localhost:5000/api/v1
 
-- Framework: Next.js 16 (App Router)
-- Runtime: React 19
-- Language: TypeScript (strict mode)
-- Styling: Tailwind CSS v4 + tw-animate-css
-- UI utilities: class-variance-authority, clsx, tailwind-merge
-- Icons: lucide-react
-- Motion: framer-motion
-- Component patterns: Radix UI primitives + shadcn architecture
+## Features
 
-## Project Structure
+- Public event listing with search and filtering
+- Event detail pages with resilient data handling
+- User authentication (login/signup) with server actions
+- Role-based dashboard routing for admin, moderator, and user
+- Event actions: create, edit, join, invite, review, and participation management
+- Reusable component-driven UI built with Radix and shadcn-style patterns
 
-```text
-app/
-	(CommonLayout)/
-		page.tsx
-		events/
-			page.tsx
-			events-browser.tsx
-			[id]/page.tsx
-		login/page.tsx
-	(DashboardLayout)/
-		dashboard/
-			@admin/(adminDashboard)/admin-dashboard/page.tsx
-			@moderator/(moderatorDashboard)/moderator-dashboard/page.tsx
-			@user/(userDashboard)/user-dashboard/page.tsx
-	not-found.tsx
+## Technologies Used
 
-components/
-	CommoneComponents/
-		Auth/loginForm.tsx
-	ui/
-		event-card.tsx
-		button.tsx
-		input.tsx
-		...
+- Next.js 16 (App Router)
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- Radix UI primitives
+- Framer Motion
+- Lucide React icons
+- class-variance-authority, clsx, and tailwind-merge
 
-actions/
-	auth.ts
-```
+## Setup Instructions
 
-## Features in Detail
+1. Prerequisites:
 
-### Event Listing
-
-- Data fetched server-side from the events API
-- Interactive filtering in the browser:
-  - Text search (name and description)
-  - Status filter (upcoming, ongoing, completed)
-  - Type filter (dynamic list from available event data)
-  - Dual-handle fee range filter
-- Pagination with Previous and Next controls
-
-### Event Details
-
-- Route: events by id
-- Attempts detail endpoint first
-- Falls back to list endpoint lookup when needed
-- Handles inconsistent payloads (id vs \_id, name vs title, venue vs location)
-- Includes event metadata cards: date, time, venue, fee, attendees, and rating
-
-### Authentication UI
-
-- Reusable login form component
-- Email and password submission through server action
-- Pending state for submit button
-- Password visibility toggle
-
-## Backend Integration
-
-The client currently calls the following API endpoints directly:
-
-- GET http://localhost:5000/api/v1/events
-- GET http://localhost:5000/api/v1/events/:id
-
-Important:
-
-- Ensure your backend server is running on port 5000 before starting the frontend.
-- If your backend URL changes, update the fetch URLs in the event pages.
-
-## Getting Started
-
-### 1) Prerequisites
-
-- Node.js 20 or newer
-- npm (or compatible package manager)
+- Node.js 20+
+- npm
 - Running Eventra backend API
 
-### 2) Install Dependencies
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-### 3) Run Development Server
+3. Configure environment variables (recommended in `.env.local`):
+
+```env
+NEXT_PUBLIC_BASE_URL=https://eventraserver.vercel.app
+NEXT_PUBLIC_API_URL=https://eventraserver.vercel.app/api/v1
+```
+
+4. Run the development server:
 
 ```bash
 npm run dev
 ```
 
-Open the app in your browser at:
+5. Open the app:
 
-```text
 http://localhost:3000
-```
 
 ## Available Scripts
 
-- npm run dev: Start development server with Turbopack
-- npm run build: Build production bundle
-- npm run start: Run production server
-- npm run lint: Run ESLint
-- npm run format: Format TypeScript files with Prettier
-- npm run typecheck: Run TypeScript type checking
-
-## Route Map
-
-- / : Home page
-- /events : Event listing with filters and pagination
-- /events/[id] : Event details
-- /login : Login page
-- /dashboard : Dashboard entry
-
-Dashboard role slots:
-
-- /dashboard/@admin
-- /dashboard/@moderator
-- /dashboard/@user
-
-## Development Notes
-
-- Path alias is enabled:
-  - @/\* maps to project root
-- TypeScript runs in strict mode
-- UI components are colocated under the components directory
-- The codebase uses server components by default, with client components for interactive UI
-
-## Quality Checklist
-
-Before opening a pull request, run:
-
-```bash
-npm run lint
-npm run typecheck
-npm run build
-```
-
-## Deployment
-
-This project can be deployed to any platform that supports Next.js, such as Vercel, Netlify, or a custom Node.js environment.
-
-For production:
-
-- Confirm backend base URL configuration
-- Run production build
-- Serve with npm run start
-
-## Contributing
-
-1. Create a feature branch
-2. Make focused changes with clear commit messages
-3. Run lint, typecheck, and build locally
-4. Open a pull request with summary, screenshots, and testing notes
-
-## License
-
-No license file is currently included in this repository. Add a LICENSE file if you plan to distribute this project.
+- `npm run dev` - Start development server
+- `npm run build` - Build production bundle
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run format` - Format files with Prettier
+- `npm run typecheck` - Run TypeScript checks

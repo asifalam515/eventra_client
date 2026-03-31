@@ -1,8 +1,11 @@
 import { getParticipationsByEventIdAction } from "@/actions/participation"
+import { getEventReviewsByEventIdAction } from "@/actions/review"
 import DeleteEventButton from "@/components/CommoneComponents/Event/deleteEventButton"
+import EventReviewsSection from "@/components/CommoneComponents/Event/event-reviews-section"
 import JoinEventButton from "@/components/CommoneComponents/Event/joinEventButton"
 import PaidEventCheckoutButton from "@/components/CommoneComponents/Event/paidEventCheckoutButton"
 import ParticipantsList from "@/components/CommoneComponents/Event/participantsList"
+import ReviewForm from "@/components/CommoneComponents/Event/review-form"
 import { Button } from "@/components/ui/button"
 import jwt, { JwtPayload } from "jsonwebtoken"
 import {
@@ -75,8 +78,14 @@ const statusConfig: Record<EventStatus, { label: string; color: string }> = {
 }
 
 const normalizeStatus = (value?: string): EventStatus => {
-  if (value === "upcoming" || value === "ongoing" || value === "completed") {
-    return value
+  const normalized = value?.toLowerCase()
+
+  if (
+    normalized === "upcoming" ||
+    normalized === "ongoing" ||
+    normalized === "completed"
+  ) {
+    return normalized
   }
 
   return "upcoming"
@@ -173,9 +182,10 @@ export default async function Page({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [event, participations] = await Promise.all([
+  const [event, participations, reviewsResult] = await Promise.all([
     getEventById(id),
     getParticipationsByEventIdAction(id),
+    getEventReviewsByEventIdAction(id),
   ])
 
   const cookieStore = await cookies()
@@ -214,6 +224,14 @@ export default async function Page({
     Boolean(
       currentUserId && event.creatorId && currentUserId === event.creatorId
     )
+  const isApprovedParticipant = Boolean(
+    currentUserId &&
+    participations.some(
+      (item) =>
+        item.userId === currentUserId &&
+        item.status?.trim().toUpperCase() === "APPROVED"
+    )
+  )
 
   return (
     <section className="w-full">
@@ -339,6 +357,26 @@ export default async function Page({
             canManage={canManage}
             initialParticipations={participations}
           />
+
+          <div className="mt-6">
+            <EventReviewsSection
+              reviews={reviewsResult.data}
+              currentUserId={currentUserId}
+            />
+          </div>
+
+          {event.eventStatus === "completed" && isApprovedParticipant && (
+            <div className="mt-6">
+              <ReviewForm eventId={event.id} />
+            </div>
+          )}
+
+          {event.eventStatus === "completed" && !isApprovedParticipant && (
+            <div className="mt-6 rounded-2xl border border-border/70 bg-card/80 p-5 text-sm text-muted-foreground shadow-sm backdrop-blur">
+              Only approved participants of this completed event can submit a
+              review.
+            </div>
+          )}
         </div>
       </div>
     </section>

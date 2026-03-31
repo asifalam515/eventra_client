@@ -362,6 +362,7 @@ export default async function Page({
             <EventReviewsSection
               reviews={reviewsResult.data}
               currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
             />
           </div>
 

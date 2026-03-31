@@ -1,15 +1,32 @@
 "use client"
 
-import { AdminEvent, AdminUser } from "@/actions/admin"
+import {
+  AdminActivityLog,
+  AdminAnalytics,
+  AdminEvent,
+  AdminUser,
+} from "@/actions/admin"
+import AdminActivityLogsPanel from "@/components/DashboardComponents/admin-activity-logs-panel"
 import AdminEventsPanel from "@/components/DashboardComponents/admin-events-panel"
 import AdminProfilePanel from "@/components/DashboardComponents/admin-profile-panel"
 import AdminUsersPanel from "@/components/DashboardComponents/admin-users-panel"
 import { useUserContext } from "@/components/providers/user-provider"
 import { Button } from "@/components/ui/button"
-import { Menu, Shield, UserCog, Users, X } from "lucide-react"
+import {
+  CalendarRange,
+  CircleDollarSign,
+  History,
+  Menu,
+  MessageSquareText,
+  Shield,
+  UserCog,
+  UserRoundCheck,
+  Users,
+  X,
+} from "lucide-react"
 import { useMemo, useState } from "react"
 
-type Section = "events" | "users" | "profile"
+type Section = "events" | "users" | "activity" | "profile"
 
 type WorkspaceProps = {
   usersResult: {
@@ -21,6 +38,21 @@ type WorkspaceProps = {
     success: boolean
     message: string
     data: AdminEvent[]
+  }
+  analyticsResult: {
+    success: boolean
+    message: string
+    data: AdminAnalytics
+  }
+  logsResult: {
+    success: boolean
+    message: string
+    data: {
+      logs: AdminActivityLog[]
+      total: number
+      page: number
+      limit: number
+    }
   }
 }
 
@@ -43,6 +75,12 @@ const sectionItems: Array<{
     description: "Inspect users, assign roles, and block suspicious users.",
   },
   {
+    id: "activity",
+    label: "Activity Logs",
+    icon: History,
+    description: "Track audit history of admin moderation actions.",
+  },
+  {
     id: "profile",
     label: "Admin Profile",
     icon: UserCog,
@@ -53,6 +91,8 @@ const sectionItems: Array<{
 export default function AdminDashboardWorkspace({
   usersResult,
   eventsResult,
+  analyticsResult,
+  logsResult,
 }: WorkspaceProps) {
   const { user } = useUserContext()
   const [activeSection, setActiveSection] = useState<Section>("events")
@@ -69,6 +109,47 @@ export default function AdminDashboardWorkspace({
     setActiveSection(section)
     setIsSidebarOpen(false)
   }
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    }).format(value)
+  }
+
+  const metricCards = [
+    {
+      label: "Total Users",
+      value: String(analyticsResult.data.totalUsers),
+      icon: Users,
+      tint: "from-cyan-500/15 to-cyan-500/5",
+    },
+    {
+      label: "Total Events",
+      value: String(analyticsResult.data.totalEvents),
+      icon: CalendarRange,
+      tint: "from-blue-500/15 to-blue-500/5",
+    },
+    {
+      label: "Total Reviews",
+      value: String(analyticsResult.data.totalReviews),
+      icon: MessageSquareText,
+      tint: "from-amber-500/15 to-amber-500/5",
+    },
+    {
+      label: "Participations",
+      value: String(analyticsResult.data.totalParticipations),
+      icon: UserRoundCheck,
+      tint: "from-emerald-500/15 to-emerald-500/5",
+    },
+    {
+      label: "Total Revenue",
+      value: formatCurrency(analyticsResult.data.totalRevenue),
+      icon: CircleDollarSign,
+      tint: "from-violet-500/15 to-violet-500/5",
+    },
+  ]
 
   return (
     <div className="relative grid min-h-[70vh] grid-cols-1 gap-4 lg:grid-cols-[auto_1fr]">
@@ -176,6 +257,56 @@ export default function AdminDashboardWorkspace({
 
       <div className="min-w-0 space-y-4">
         <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                Dashboard Analytics
+              </p>
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">
+                Real-time Platform Overview
+              </h2>
+            </div>
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                analyticsResult.success
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-100"
+                  : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-100"
+              }`}
+            >
+              {analyticsResult.success ? "Live" : "Unavailable"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {metricCards.map((metric) => {
+              const Icon = metric.icon
+
+              return (
+                <article
+                  key={metric.label}
+                  className={`rounded-xl border border-border/70 bg-linear-to-br ${metric.tint} p-3 shadow-sm`}
+                >
+                  <div className="mb-3 inline-flex rounded-lg border border-border/70 bg-background/70 p-2">
+                    <Icon className="size-4 text-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {metric.label}
+                  </p>
+                  <p className="mt-1 truncate text-xl font-semibold text-foreground">
+                    {metric.value}
+                  </p>
+                </article>
+              )
+            })}
+          </div>
+          {!analyticsResult.success && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              {analyticsResult.message}
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -213,6 +344,17 @@ export default function AdminDashboardWorkspace({
               initialUsers={usersResult.data}
               initialMessage={usersResult.message}
               initialMessageType={usersResult.success ? "success" : "error"}
+            />
+          )}
+
+          {activeSection === "activity" && (
+            <AdminActivityLogsPanel
+              initialLogs={logsResult.data.logs}
+              initialTotal={logsResult.data.total}
+              initialPage={logsResult.data.page}
+              initialLimit={logsResult.data.limit}
+              initialMessage={logsResult.message}
+              initialMessageType={logsResult.success ? "success" : "error"}
             />
           )}
 

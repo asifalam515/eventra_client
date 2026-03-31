@@ -89,6 +89,55 @@ type UpdateAdminEventStatusResponse = {
   message: string
 }
 
+type DeleteAdminReviewResponse = {
+  success: boolean
+  message: string
+}
+
+export type AdminAnalytics = {
+  totalUsers: number
+  totalEvents: number
+  totalReviews: number
+  totalParticipations: number
+  totalRevenue: number
+}
+
+export type AdminActivityLog = {
+  id: string
+  action: string
+  targetId?: string
+  details?: string
+  createdAt?: string
+  adminId?: string
+  admin?: {
+    id?: string
+    name?: string
+    email?: string
+  }
+}
+
+export type AdminActivityLogsQuery = {
+  page?: number
+  limit?: number
+}
+
+type AdminAnalyticsResponse = {
+  success: boolean
+  message: string
+  data: AdminAnalytics
+}
+
+type AdminActivityLogsResponse = {
+  success: boolean
+  message: string
+  data: {
+    logs: AdminActivityLog[]
+    total: number
+    page: number
+    limit: number
+  }
+}
+
 type JsonRecord = Record<string, unknown>
 
 function mapUser(payload: Record<string, unknown>): AdminUser | null {
@@ -158,6 +207,31 @@ function mapEvent(payload: JsonRecord): AdminEvent | null {
           (payload.creator as JsonRecord | undefined)?._id ??
           ""
       ) || undefined,
+  }
+}
+
+function mapActivityLog(payload: JsonRecord): AdminActivityLog | null {
+  const id = String(payload.id ?? payload._id ?? payload.logId ?? "")
+  if (!id) return null
+
+  const adminPayload =
+    (payload.admin as JsonRecord | undefined) ??
+    (payload.actor as JsonRecord | undefined)
+
+  return {
+    id,
+    action: String(payload.action ?? payload.type ?? "UNKNOWN"),
+    targetId: String(payload.targetId ?? payload.target ?? "") || undefined,
+    details: String(payload.details ?? payload.description ?? "") || undefined,
+    createdAt: String(payload.createdAt ?? "") || undefined,
+    adminId: String(payload.adminId ?? adminPayload?.id ?? "") || undefined,
+    admin: adminPayload
+      ? {
+          id: String(adminPayload.id ?? "") || undefined,
+          name: String(adminPayload.name ?? "") || undefined,
+          email: String(adminPayload.email ?? "") || undefined,
+        }
+      : undefined,
   }
 }
 
@@ -849,6 +923,237 @@ export async function updateAdminEventStatusAction(
         error instanceof Error
           ? error.message
           : "Failed to update event status.",
+    }
+  }
+}
+
+export async function deleteAdminReviewAction(
+  reviewId: string
+): Promise<DeleteAdminReviewResponse> {
+  const normalizedReviewId = reviewId.trim()
+
+  if (!normalizedReviewId) {
+    return {
+      success: false,
+      message: "Review ID is required.",
+    }
+  }
+
+  const token = await getAuthToken()
+
+  if (!token) {
+    return {
+      success: false,
+      message: "Unauthorized. Please log in.",
+    }
+  }
+
+  try {
+    const response = await fetchWithAuthFallback(
+      `${process.env.NEXT_PUBLIC_API_URL}/admin/reviews/${normalizedReviewId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      },
+      token
+    )
+
+    const body = await parseResponseBody(response)
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: String(
+          body?.message ?? body?.error ?? "Failed to delete review."
+        ),
+      }
+    }
+
+    return {
+      success: true,
+      message: String(body?.message ?? "Review deleted successfully."),
+    }
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to delete review.",
+    }
+  }
+}
+
+export async function getAdminAnalyticsAction(): Promise<AdminAnalyticsResponse> {
+  const token = await getAuthToken()
+
+  if (!token) {
+    return {
+      success: false,
+      message: "Unauthorized. Please log in.",
+      data: {
+        totalUsers: 0,
+        totalEvents: 0,
+        totalReviews: 0,
+        totalParticipations: 0,
+        totalRevenue: 0,
+      },
+    }
+  }
+
+  try {
+    const response = await fetchWithAuthFallback(
+      `${process.env.NEXT_PUBLIC_API_URL}/admin/analytics`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      },
+      token
+    )
+
+    const body = await parseResponseBody(response)
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: String(
+          body?.message ?? body?.error ?? "Failed to fetch dashboard analytics."
+        ),
+        data: {
+          totalUsers: 0,
+          totalEvents: 0,
+          totalReviews: 0,
+          totalParticipations: 0,
+          totalRevenue: 0,
+        },
+      }
+    }
+
+    const payload = ((body?.data as JsonRecord | undefined) ??
+      body) as JsonRecord
+
+    return {
+      success: true,
+      message: String(
+        body?.message ?? "Dashboard analytics fetched successfully."
+      ),
+      data: {
+        totalUsers: Number(payload?.totalUsers ?? 0) || 0,
+        totalEvents: Number(payload?.totalEvents ?? 0) || 0,
+        totalReviews: Number(payload?.totalReviews ?? 0) || 0,
+        totalParticipations: Number(payload?.totalParticipations ?? 0) || 0,
+        totalRevenue: Number(payload?.totalRevenue ?? 0) || 0,
+      },
+    }
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch dashboard analytics.",
+      data: {
+        totalUsers: 0,
+        totalEvents: 0,
+        totalReviews: 0,
+        totalParticipations: 0,
+        totalRevenue: 0,
+      },
+    }
+  }
+}
+
+export async function getAdminActivityLogsAction(
+  query: AdminActivityLogsQuery = {}
+): Promise<AdminActivityLogsResponse> {
+  const token = await getAuthToken()
+
+  const fallback = {
+    logs: [] as AdminActivityLog[],
+    total: 0,
+    page: query.page && query.page > 0 ? query.page : 1,
+    limit: query.limit && query.limit > 0 ? query.limit : 20,
+  }
+
+  if (!token) {
+    return {
+      success: false,
+      message: "Unauthorized. Please log in.",
+      data: fallback,
+    }
+  }
+
+  const searchParams = new URLSearchParams()
+  searchParams.set(
+    "page",
+    String(query.page && query.page > 0 ? query.page : 1)
+  )
+  searchParams.set(
+    "limit",
+    String(query.limit && query.limit > 0 ? query.limit : 20)
+  )
+
+  try {
+    const response = await fetchWithAuthFallback(
+      `${process.env.NEXT_PUBLIC_API_URL}/admin/activity-logs?${searchParams.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      },
+      token
+    )
+
+    const body = await parseResponseBody(response)
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: String(
+          body?.message ?? body?.error ?? "Failed to fetch activity logs."
+        ),
+        data: fallback,
+      }
+    }
+
+    const dataPayload = (body?.data as JsonRecord | undefined) ?? body
+    const logsPayload =
+      (Array.isArray(dataPayload?.logs) ? dataPayload.logs : undefined) ??
+      (Array.isArray(body?.logs) ? body.logs : undefined) ??
+      []
+
+    const logs = logsPayload
+      .map((item) =>
+        item && typeof item === "object"
+          ? mapActivityLog(item as JsonRecord)
+          : null
+      )
+      .filter((item): item is AdminActivityLog => Boolean(item))
+
+    return {
+      success: true,
+      message: String(body?.message ?? "Activity logs fetched successfully"),
+      data: {
+        logs,
+        total: Number(dataPayload?.total ?? 0) || 0,
+        page: Number(dataPayload?.page ?? fallback.page) || fallback.page,
+        limit: Number(dataPayload?.limit ?? fallback.limit) || fallback.limit,
+      },
+    }
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch activity logs.",
+      data: fallback,
     }
   }
 }

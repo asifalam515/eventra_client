@@ -1,5 +1,6 @@
 "use client"
 
+import { deleteAdminReviewAction } from "@/actions/admin"
 import {
   deleteReviewAction,
   EventReview,
@@ -30,9 +31,11 @@ function formatDate(value?: string) {
 export default function EventReviewsSection({
   reviews,
   currentUserId,
+  currentUserRole,
 }: {
   reviews: EventReview[]
   currentUserId?: string | null
+  currentUserRole?: string | null
 }) {
   const [items, setItems] = useState(reviews)
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null)
@@ -40,6 +43,8 @@ export default function EventReviewsSection({
   const [editComment, setEditComment] = useState("")
   const [toast, setToast] = useState<ToastState | null>(null)
   const [isPending, startTransition] = useTransition()
+  const normalizedRole = currentUserRole?.trim().toUpperCase()
+  const isAdmin = normalizedRole === "ADMIN" || normalizedRole === "SUPER_ADMIN"
 
   useEffect(() => {
     if (!toast) return
@@ -87,7 +92,18 @@ export default function EventReviewsSection({
     })
   }
 
-  const handleDeleteReview = (reviewId: string) => {
+  const handleDeleteReview = (review: EventReview) => {
+    const isOwner = Boolean(currentUserId && review.userId === currentUserId)
+    const canDelete = isOwner || isAdmin
+
+    if (!canDelete) {
+      setToast({
+        type: "error",
+        message: "You are not allowed to delete this review.",
+      })
+      return
+    }
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this review?"
     )
@@ -95,16 +111,18 @@ export default function EventReviewsSection({
     if (!confirmed) return
 
     startTransition(async () => {
-      const result = await deleteReviewAction(reviewId)
+      const result = isAdmin
+        ? await deleteAdminReviewAction(review.id)
+        : await deleteReviewAction(review.id)
 
       if (!result.success) {
         setToast({ type: "error", message: result.message })
         return
       }
 
-      setItems((prev) => prev.filter((item) => item.id !== reviewId))
+      setItems((prev) => prev.filter((item) => item.id !== review.id))
 
-      if (editingReviewId === reviewId) {
+      if (editingReviewId === review.id) {
         handleCancelEdit()
       }
 
@@ -215,29 +233,32 @@ export default function EventReviewsSection({
                     {review.comment || "No written comment."}
                   </p>
 
-                  {currentUserId && review.userId === currentUserId && (
+                  {(currentUserId && review.userId === currentUserId) ||
+                  isAdmin ? (
                     <div className="mt-3">
                       <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleStartEdit(review)}
-                          disabled={isPending}
-                        >
-                          <PencilLine className="size-4" /> Edit Review
-                        </Button>
+                        {currentUserId && review.userId === currentUserId && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleStartEdit(review)}
+                            disabled={isPending}
+                          >
+                            <PencilLine className="size-4" /> Edit Review
+                          </Button>
+                        )}
 
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => handleDeleteReview(review.id)}
+                          onClick={() => handleDeleteReview(review)}
                           disabled={isPending}
                         >
                           <Trash2 className="size-4" /> Delete
                         </Button>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </>
               )}
             </article>

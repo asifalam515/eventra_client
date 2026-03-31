@@ -1,13 +1,16 @@
+import { getMyEventsAction } from "@/actions/event"
 import { getMyInvitationsAction } from "@/actions/invitation"
-import DashboardProfileSection from "@/components/CommoneComponents/Dashboard/dashboard-profile-section"
+import UserDashboardWorkspace from "@/components/DashboardComponents/user-dashboard-workspace"
 
 export default async function UserDashboardPage() {
-  const invitationsResult = await getMyInvitationsAction()
+  const [invitationsResult, eventsResult] = await Promise.all([
+    getMyInvitationsAction(),
+    getMyEventsAction(),
+  ])
 
   return (
-    <DashboardProfileSection
-      title="Dashboard"
-      subtitle="Here is your profile information."
+    <UserDashboardWorkspace
+      initialEvents={eventsResult.success ? eventsResult.data : []}
       initialInvitations={
         invitationsResult.success ? invitationsResult.data : []
       }

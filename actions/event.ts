@@ -377,3 +377,97 @@ export async function deleteEventAction(
     }
   }
 }
+
+export type Event = {
+  id: string
+  title: string
+  description: string
+  date: string
+  time: string
+  venue: string
+  type: string
+  fee: number
+  isFeatured: boolean
+  creatorId?: string
+  creator?: {
+    id: string
+    name: string
+    email: string
+  }
+}
+
+export type GetMyEventsResult = {
+  success: boolean
+  data: Event[]
+  message: string
+}
+
+export async function getMyEventsAction(): Promise<GetMyEventsResult> {
+  const cookieStore = await cookies()
+  const token = normalizeToken(cookieStore.get("token")?.value)
+
+  if (!token) {
+    return {
+      success: false,
+      data: [],
+      message: "Please log in to view your events.",
+    }
+  }
+
+  try {
+    // Get current user's ID from token
+    const currentUser = getUserFromToken(token)
+    if (!currentUser.id) {
+      return {
+        success: false,
+        data: [],
+        message: "Unable to determine user identity.",
+      }
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/events?createdBy=me`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        cache: "no-store",
+      }
+    )
+
+    if (!response.ok) {
+      return {
+        success: false,
+        data: [],
+        message: "Failed to fetch your events.",
+      }
+    }
+
+    const body = (await response.json()) as Record<string, unknown>
+    let events = Array.isArray(body?.data) ? body.data : []
+
+    // Filter events to ensure only current user's events are returned
+    // This is a client-side safety check
+    events = events.filter((event: unknown) => {
+      if (typeof event !== "object" || event === null) return false
+      const evt = event as Record<string, unknown>
+      const ownerId = resolveEventOwnerId(evt as ApiEvent)
+      return ownerId === currentUser.id
+    })
+
+    return {
+      success: true,
+      data: events as Event[],
+      message: "Events fetched successfully.",
+    }
+  } catch (error: unknown) {
+    return {
+      success: false,
+      data: [],
+      message:
+        error instanceof Error ? error.message : "Failed to fetch your events.",
+    }
+  }
+}

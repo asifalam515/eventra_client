@@ -4,17 +4,20 @@ import type { MyInvitation } from "@/actions/invitation"
 import ProfileCard from "@/components/CommoneComponents/Dashboard/ProfileCard"
 import MyInvitationsPanel from "@/components/CommoneComponents/Dashboard/my-invitations-panel"
 import { useUserContext } from "@/components/providers/user-provider"
+import React from "react"
 
 type DashboardProfileSectionProps = {
   title: string
   subtitle: string
   initialInvitations: MyInvitation[]
+  children?: React.ReactNode
 }
 
 export default function DashboardProfileSection({
   title,
   subtitle,
   initialInvitations,
+  children,
 }: DashboardProfileSectionProps) {
   const { user } = useUserContext()
 
@@ -40,6 +43,8 @@ export default function DashboardProfileSection({
         </div>
 
         <MyInvitationsPanel initialInvitations={initialInvitations} />
+
+        {children}
       </div>
     </div>
   )

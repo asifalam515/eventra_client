@@ -1,9 +1,6 @@
 "use client"
 
-import {
-  joinParticipationByEventIdAction,
-  updateParticipationStatusByFieldsAction,
-} from "@/actions/participation"
+import { joinParticipationByEventIdAction } from "@/actions/participation"
 import {
   confirmPaymentAction,
   createPaymentIntentAction,
@@ -17,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { PARTICIPATION_STATUS_UPDATED_EVENT } from "@/lib/participation-events"
 import {
   Elements,
   PaymentElement,
@@ -203,43 +199,16 @@ function PaymentForm({
       const joinResult = await joinParticipationByEventIdAction(eventId)
       if (!joinResult.status || joinResult.status !== "success") {
         onStageChange("failed")
-        setError(joinResult.message || "Payment succeeded but join failed.")
+        setError(
+          joinResult.message || "Payment succeeded but join request failed."
+        )
         return
       }
 
-      if (userId) {
-        onStageChange("approving_participation")
-        const approvalResult = await updateParticipationStatusByFieldsAction(
-          eventId,
-          userId,
-          "APPROVED"
-        )
-
-        if (approvalResult.status !== "success") {
-          onStageChange("failed")
-          setError(
-            approvalResult.message ||
-              "Payment completed but failed to auto-approve participation."
-          )
-          return
-        }
-
-        window.dispatchEvent(
-          new CustomEvent(PARTICIPATION_STATUS_UPDATED_EVENT, {
-            detail: {
-              eventId,
-              userId,
-              status: "APPROVED",
-              userName,
-              userEmail,
-              createdAt: new Date().toISOString(),
-            },
-          })
-        )
-      }
-
       onStageChange("completed")
-      onSuccess("Payment successful and event joined.")
+      onSuccess(
+        "Payment successful! Your join request has been sent. Please wait for the event organizer to approve your participation."
+      )
     } catch (submitError: unknown) {
       onStageChange("failed")
       setError(

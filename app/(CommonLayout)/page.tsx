@@ -92,7 +92,7 @@ const page = async () => {
               Featured Events on Home
             </h2>
             <p className="mt-1 text-muted-foreground">
-              Swipe through 9 upcoming public events directly from the homepage.
+              Swipe through upcoming public events directly from the homepage.
             </p>
           </div>
 

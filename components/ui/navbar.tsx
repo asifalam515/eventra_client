@@ -50,6 +50,9 @@ export default function Navbar() {
   const { user } = useUserContext()
   const [openSearch, setOpenSearch] = React.useState(false)
   const [openProfile, setOpenProfile] = React.useState(false)
+  const createEventHref = user
+    ? "/create-event"
+    : "/login?redirect=/create-event"
 
   React.useEffect(() => {
     const closeOnOutsideClick = (event: MouseEvent) => {
@@ -206,7 +209,7 @@ export default function Navbar() {
                         asChild
                         className="justify-start"
                       >
-                        <Link href="/create-event">
+                        <Link href={createEventHref}>
                           <PlusCircle className="mr-2 size-4" /> Create Event
                         </Link>
                       </Button>
@@ -243,7 +246,7 @@ export default function Navbar() {
                   <Link href="/login">Login</Link>
                 </Button>
                 <Button size="sm" className="gap-2 shadow-md" asChild>
-                  <Link href="/create-event">
+                  <Link href={createEventHref}>
                     <PlusCircle className="size-4" />
                     <span>Create Event</span>
                   </Link>

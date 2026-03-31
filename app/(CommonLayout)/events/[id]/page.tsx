@@ -2,6 +2,7 @@ import { getParticipationsByEventIdAction } from "@/actions/participation"
 import { getEventReviewsByEventIdAction } from "@/actions/review"
 import DeleteEventButton from "@/components/CommoneComponents/Event/deleteEventButton"
 import EventReviewsSection from "@/components/CommoneComponents/Event/event-reviews-section"
+import InvitationSendForm from "@/components/CommoneComponents/Event/invitation-send-form"
 import JoinEventButton from "@/components/CommoneComponents/Event/joinEventButton"
 import PaidEventCheckoutButton from "@/components/CommoneComponents/Event/paidEventCheckoutButton"
 import ParticipantsList from "@/components/CommoneComponents/Event/participantsList"
@@ -224,6 +225,9 @@ export default async function Page({
     Boolean(
       currentUserId && event.creatorId && currentUserId === event.creatorId
     )
+  const isEventHost = Boolean(
+    currentUserId && event.creatorId && currentUserId === event.creatorId
+  )
   const isApprovedParticipant = Boolean(
     currentUserId &&
     participations.some(
@@ -357,6 +361,12 @@ export default async function Page({
             canManage={canManage}
             initialParticipations={participations}
           />
+
+          {isEventHost && (
+            <div className="mt-6">
+              <InvitationSendForm eventId={event.id} />
+            </div>
+          )}
 
           <div className="mt-6">
             <EventReviewsSection

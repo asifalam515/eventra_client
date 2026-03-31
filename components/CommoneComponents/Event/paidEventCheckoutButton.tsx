@@ -29,9 +29,12 @@ import { CreditCard, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState, useTransition } from "react"
 
-const stripePromise = loadStripe(
+const stripePublishableKey = (
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
-)
+).trim()
+const stripePromise = stripePublishableKey
+  ? loadStripe(stripePublishableKey)
+  : null
 
 type ToastState = {
   type: "success" | "error"
@@ -99,6 +102,14 @@ function PaymentForm({
   const elements = useElements()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const handleElementLoadError = (event: { error?: { message?: string } }) => {
+    const message =
+      event.error?.message ||
+      "Payment form failed to load. Please try again or use another browser."
+    onStageChange("failed")
+    setError(message)
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -244,7 +255,10 @@ function PaymentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-lg border border-border/60 bg-card p-3">
-        <PaymentElement options={{ layout: "tabs" }} />
+        <PaymentElement
+          options={{ layout: "tabs" }}
+          onLoadError={handleElementLoadError}
+        />
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -285,7 +299,10 @@ export default function PaidEventCheckoutButton({
   const [stage, setStage] = useState<PaymentStage>("idle")
   const [isIntentPending, startIntentTransition] = useTransition()
 
-  const stripeMissing = !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  const stripeMissing = !stripePublishableKey
+  const stripeKeyInvalidFormat =
+    Boolean(stripePublishableKey) &&
+    !/^pk_(test|live)_/.test(stripePublishableKey)
 
   const elementsOptions = useMemo(
     () => ({
@@ -376,6 +393,11 @@ export default function PaidEventCheckoutButton({
           {stripeMissing ? (
             <p className="text-sm text-red-600">
               Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in environment.
+            </p>
+          ) : stripeKeyInvalidFormat ? (
+            <p className="text-sm text-red-600">
+              Invalid NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY format. Expected
+              pk_test_... or pk_live_...
             </p>
           ) : isIntentPending && !clientSecret ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

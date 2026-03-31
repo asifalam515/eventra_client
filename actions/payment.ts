@@ -96,6 +96,14 @@ export async function createPaymentIntentAction(
       }
     }
 
+    if (!clientSecret.includes("_secret_")) {
+      return {
+        success: false,
+        message:
+          "Invalid Stripe client secret received from server. Please contact support.",
+      }
+    }
+
     return {
       success: true,
       message: String(body?.message ?? "Payment intent created."),

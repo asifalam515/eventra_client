@@ -1,16 +1,20 @@
 "use client"
 
+import type { MyInvitation } from "@/actions/invitation"
 import ProfileCard from "@/components/CommoneComponents/Dashboard/ProfileCard"
+import MyInvitationsPanel from "@/components/CommoneComponents/Dashboard/my-invitations-panel"
 import { useUserContext } from "@/components/providers/user-provider"
 
 type DashboardProfileSectionProps = {
   title: string
   subtitle: string
+  initialInvitations: MyInvitation[]
 }
 
 export default function DashboardProfileSection({
   title,
   subtitle,
+  initialInvitations,
 }: DashboardProfileSectionProps) {
   const { user } = useUserContext()
 
@@ -35,9 +39,7 @@ export default function DashboardProfileSection({
           <ProfileCard />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Placeholder for future dashboard widgets */}
-        </div>
+        <MyInvitationsPanel initialInvitations={initialInvitations} />
       </div>
     </div>
   )

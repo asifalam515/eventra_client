@@ -10,6 +10,7 @@ export type SentInvitation = {
   createdAt?: string
   eventId?: string
   userId?: string
+  email?: string
 }
 
 export type InvitationEvent = {
@@ -126,16 +127,16 @@ async function fetchWithAuthFallback(
 }
 
 export async function sendInvitationAction(payload: {
-  userId: string
+  email: string
   eventId: string
 }): Promise<SendInvitationResponse> {
-  const userId = payload.userId.trim()
+  const email = payload.email.trim()
   const eventId = payload.eventId.trim()
 
-  if (!userId || !eventId) {
+  if (!email || !eventId) {
     return {
       success: false,
-      message: "Both userId and eventId are required.",
+      message: "Both email and eventId are required.",
     }
   }
 
@@ -151,13 +152,13 @@ export async function sendInvitationAction(payload: {
 
   try {
     const response = await fetchWithAuthFallback(
-      `${process.env.NEXT_PUBLIC_API_URL}/invitation/send`,
+      `${process.env.NEXT_PUBLIC_API_URL}/invitation/send-by-email`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId, eventId }),
+        body: JSON.stringify({ email, eventId }),
         cache: "no-store",
       },
       token
@@ -186,6 +187,9 @@ export async function sendInvitationAction(payload: {
         createdAt: String(data?.createdAt ?? "") || undefined,
         eventId: String(data?.eventId ?? "") || undefined,
         userId: String(data?.userId ?? "") || undefined,
+        email:
+          String(data?.email ?? data?.userEmail ?? data?.inviteeEmail ?? "") ||
+          undefined,
       },
     }
   } catch (error: unknown) {

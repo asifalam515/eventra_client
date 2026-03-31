@@ -3,7 +3,7 @@
 import { sendInvitationAction } from "@/actions/invitation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MailPlus, Send, UserRound } from "lucide-react"
+import { Mail, MailPlus, Send } from "lucide-react"
 import { useEffect, useState, useTransition } from "react"
 
 type ToastState = {
@@ -12,7 +12,7 @@ type ToastState = {
 }
 
 export default function InvitationSendForm({ eventId }: { eventId: string }) {
-  const [userId, setUserId] = useState("")
+  const [email, setEmail] = useState("")
   const [toast, setToast] = useState<ToastState | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -29,7 +29,7 @@ export default function InvitationSendForm({ eventId }: { eventId: string }) {
   const handleSendInvite = () => {
     startTransition(async () => {
       const result = await sendInvitationAction({
-        userId,
+        email,
         eventId,
       })
 
@@ -38,7 +38,7 @@ export default function InvitationSendForm({ eventId }: { eventId: string }) {
         return
       }
 
-      setUserId("")
+      setEmail("")
       setToast({ type: "success", message: result.message })
     })
   }
@@ -53,21 +53,22 @@ export default function InvitationSendForm({ eventId }: { eventId: string }) {
             Invitations
           </p>
           <h3 className="mt-1 text-xl font-semibold text-foreground">
-            Invite User to This Event
+            Invite User by Email
           </h3>
           <p className="text-sm text-muted-foreground">
-            Send direct invitation to a user by their user ID.
+            Send direct invitation to a user by their email address.
           </p>
         </div>
 
         <div className="rounded-xl border border-border/70 bg-background/70 p-4">
           <label className="mb-2 flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            <UserRound className="size-3.5" /> Invitee User ID
+            <Mail className="size-3.5" /> Invitee Email
           </label>
           <Input
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="be25e4a0-fd03-418c-b533-8a0b61f9e5a3"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="invitee@example.com"
             className="bg-background"
             disabled={isPending}
           />
@@ -79,7 +80,7 @@ export default function InvitationSendForm({ eventId }: { eventId: string }) {
             <Button
               type="button"
               onClick={handleSendInvite}
-              disabled={isPending || !userId.trim()}
+              disabled={isPending || !email.trim()}
             >
               {isPending ? (
                 <>

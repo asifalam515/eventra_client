@@ -47,23 +47,39 @@ export default function EditProfileModal({
       })
 
       if (result.success) {
+        const payload =
+          (result.data as Record<string, unknown> | undefined) ?? undefined
+        const userPayload =
+          (payload?.user as Record<string, unknown> | undefined) ??
+          (payload?.profile as Record<string, unknown> | undefined) ??
+          payload
+
+        const nextName =
+          String(userPayload?.name ?? userPayload?.fullName ?? nameValue) ||
+          nameValue
+        const nextEmail =
+          String(userPayload?.email ?? userPayload?.userEmail ?? emailValue) ||
+          emailValue
+        const nextPhoto =
+          String(userPayload?.photo ?? userPayload?.avatar ?? photoValue) ||
+          photoValue
+
         setToastMessage("Profile updated successfully!")
         setToastType("success")
         setShowToast(true)
         setToastProgress(100)
 
-        setTimeout(() => {
-          setName(nameValue)
-          setEmail(emailValue)
-          setPhoto(photoValue)
-          setIsModified(false)
-          onClose()
-          onSuccess?.({
-            name: nameValue,
-            email: emailValue,
-            photo: photoValue || undefined,
-          })
-        }, 1800)
+        setName(nextName)
+        setEmail(nextEmail)
+        setPhoto(nextPhoto)
+        setIsModified(false)
+
+        onSuccess?.({
+          name: nextName,
+          email: nextEmail,
+          photo: nextPhoto || undefined,
+        })
+        onClose()
       } else {
         setToastMessage(result.error || "Failed to update profile")
         setToastType("error")

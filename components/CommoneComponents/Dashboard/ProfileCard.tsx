@@ -117,11 +117,17 @@ export default function ProfileCard() {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSuccess={(updated) => {
-          setUser({
+          const patchedUser = {
             ...user,
             ...updated,
-          })
-          void refreshUser()
+          }
+
+          setUser(patchedUser)
+
+          void (async () => {
+            await refreshUser()
+            setUser(patchedUser)
+          })()
         }}
       />
     </div>

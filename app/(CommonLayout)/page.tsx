@@ -3,6 +3,8 @@ import { HeroSection } from "@/components/ui/hero-section-shadcnui"
 import HomeEventsSlider, {
   type HomeEventSlide,
 } from "@/components/ui/home-events-slider"
+import PlatformReviewsSection from "@/components/ui/platform-reviews-section"
+import UpcomingEventsSection from "@/components/ui/upcoming-events-section"
 import {
   CalendarDays,
   CreditCard,
@@ -37,6 +39,8 @@ interface Event {
   attendees?: number
 }
 
+type JsonRecord = Record<string, unknown>
+
 function normalizeEnum(value?: string) {
   return String(value ?? "")
     .trim()
@@ -63,13 +67,23 @@ function formatCompactNumber(value: number) {
   return new Intl.NumberFormat("en", { notation: "compact" }).format(value)
 }
 
+async function parseJsonSafe(response: Response): Promise<JsonRecord> {
+  try {
+    return (await response.json()) as JsonRecord
+  } catch {
+    return {}
+  }
+}
+
 const page = async () => {
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
     cache: "no-store",
   })
 
-  const events = await response.json()
-  const allEvents: Event[] = events?.data ?? []
+  const events = await parseJsonSafe(response)
+  const allEvents: Event[] = Array.isArray(events?.data)
+    ? (events.data as Event[])
+    : []
   const publicEvents = allEvents.filter((event: Event) => isPublicEvent(event))
   const availablePublicEvents = publicEvents.filter((event: Event) => {
     const status = normalizeEnum(event.eventStatus || event.status)
@@ -101,7 +115,7 @@ const page = async () => {
       ratedEvents.length
     : 0
 
-  const eventList: HomeEventSlide[] = (events?.data ?? [])
+  const eventList: HomeEventSlide[] = allEvents
     .filter((event: Event) => {
       const status = normalizeEnum(event.eventStatus || event.status)
       return (
@@ -188,6 +202,9 @@ const page = async () => {
         <HomeEventsSlider events={eventList} />
         <CallToAction></CallToAction>
       </section>
+
+      <UpcomingEventsSection />
+      <PlatformReviewsSection />
 
       <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-linear-to-br from-amber-50/90 via-background to-cyan-50/80 p-6 shadow-[0_18px_60px_-28px_rgba(0,0,0,0.45)] sm:p-8 lg:p-10">
         <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-amber-400/20 blur-3xl" />

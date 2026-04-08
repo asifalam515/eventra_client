@@ -56,7 +56,7 @@ const LoginForm = () => {
 
       const redirectTimer = setTimeout(() => {
         router.push(safeRedirect)
-      }, 2000) // 2 second delay to show success message
+      }, 1000) // 1 second delay to show success message
 
       return () => clearTimeout(redirectTimer)
     }

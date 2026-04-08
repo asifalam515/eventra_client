@@ -4,7 +4,7 @@ import Link from "next/link"
 
 export function CallToAction() {
   return (
-    <section className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border border-border/70 bg-card/80 px-5 py-8 shadow-lg backdrop-blur sm:px-8 sm:py-10">
+    <section className="relative w-full overflow-hidden rounded-3xl border border-border/70 bg-card/80 px-5 py-8 shadow-lg backdrop-blur sm:px-8 sm:py-10">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,hsl(var(--primary)/0.2),transparent_45%),radial-gradient(circle_at_85%_15%,hsl(var(--foreground)/0.08),transparent_35%),radial-gradient(circle_at_50%_100%,hsl(var(--primary)/0.12),transparent_45%)]" />
 
       <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

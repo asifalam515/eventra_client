@@ -67,7 +67,7 @@ const SignupForm = () => {
     if (state.status === "success") {
       const redirectTimer = setTimeout(() => {
         router.push("/")
-      }, 2000)
+      }, 1000)
 
       return () => clearTimeout(redirectTimer)
     }

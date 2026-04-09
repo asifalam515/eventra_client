@@ -1,3 +1,4 @@
+import ChatAssistant from "@/components/CommoneComponents/AIChat/chat-assistant"
 import { CallToAction } from "@/components/ui/cta-3"
 import { HeroSection } from "@/components/ui/hero-section-shadcnui"
 import HomeEventsSlider, {
@@ -179,6 +180,21 @@ const page = async () => {
   return (
     <div className="space-y-12">
       <HeroSection />
+
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">
+              Ask the AI Event Assistant
+            </h2>
+            <p className="mt-1 text-muted-foreground">
+              Get personalized recommendations based on live event data.
+            </p>
+          </div>
+        </div>
+
+        <ChatAssistant />
+      </section>
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">

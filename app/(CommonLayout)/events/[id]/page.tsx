@@ -148,7 +148,7 @@ async function getEventById(id: string): Promise<EventDetails | null> {
     const detailResponse = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/events/${id}`,
       {
-        cache: "no-store",
+        next: { revalidate: 300 },
       }
     )
 
@@ -165,7 +165,7 @@ async function getEventById(id: string): Promise<EventDetails | null> {
     const listResponse = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/events`,
       {
-        cache: "no-store",
+        next: { revalidate: 300 },
       }
     )
 
@@ -180,6 +180,25 @@ async function getEventById(id: string): Promise<EventDetails | null> {
     return matched ? normalizeEvent(matched) : null
   } catch {
     return null
+  }
+}
+
+export async function generateStaticParams() {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
+      next: { revalidate: 300 },
+    })
+    if (!response.ok) return []
+    const data = await response.json()
+    const events = Array.isArray(data?.data) ? data.data : []
+    
+    // Pre-render the top 20 upcoming events at build time
+    return events.slice(0, 20).map((event: any) => ({
+      id: String(event.id || event._id),
+    }))
+  } catch (error) {
+    console.error("Failed to generate static params for events:", error)
+    return []
   }
 }
 

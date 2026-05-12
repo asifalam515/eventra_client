@@ -28,7 +28,7 @@ const page = async ({
     : (rawSearch ?? "")
 
   const data = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
-    cache: "no-store",
+    next: { revalidate: 300 },
   })
 
   const events = await data.json()

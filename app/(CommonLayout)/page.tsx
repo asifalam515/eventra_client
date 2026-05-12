@@ -80,7 +80,7 @@ async function parseJsonSafe(response: Response): Promise<JsonRecord> {
 
 const page = async () => {
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
-    cache: "no-store",
+    next: { revalidate: 300 },
   })
 
   const events = await parseJsonSafe(response)

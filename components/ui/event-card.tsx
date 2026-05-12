@@ -85,7 +85,13 @@ export function EventCard({ event }: EventCardProps) {
               <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Calendar className="size-4 shrink-0" />
               </div>
-              <span className="font-medium text-slate-700 dark:text-slate-300">{event.date}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {new Date(event.date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </span>
             </div>
           )}
 

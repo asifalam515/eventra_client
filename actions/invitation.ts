@@ -7,6 +7,8 @@ export type SentInvitation = {
   id: string
   status?: string
   payment?: string
+  participantId?: string
+  paymentId?: string
   createdAt?: string
   eventId?: string
   userId?: string
@@ -63,6 +65,21 @@ function mapInvitation(payload: JsonRecord): MyInvitation | null {
     status: String(payload.status ?? "") || undefined,
     payment:
       String(payload.payment ?? payload.paymentStatus ?? "") || undefined,
+    participantId:
+      String(
+        payload.participantId ??
+          payload.participationId ??
+          payload.registrationId ??
+          ""
+      ) || undefined,
+    paymentId:
+      String(
+        payload.paymentId ??
+          payload.transactionId ??
+          payload.paymentIntentId ??
+          payload.stripePaymentId ??
+          ""
+      ) || undefined,
     createdAt: String(payload.createdAt ?? "") || undefined,
     eventId: String(payload.eventId ?? eventPayload?.id ?? "") || undefined,
     userId: String(payload.userId ?? "") || undefined,
@@ -184,6 +201,21 @@ export async function sendInvitationAction(payload: {
         id: String(data?.id ?? data?._id ?? ""),
         status: String(data?.status ?? "") || undefined,
         payment: String(data?.payment ?? "") || undefined,
+        participantId:
+          String(
+            data?.participantId ??
+              data?.participationId ??
+              data?.registrationId ??
+              ""
+          ) || undefined,
+        paymentId:
+          String(
+            data?.paymentId ??
+              data?.transactionId ??
+              data?.paymentIntentId ??
+              data?.stripePaymentId ??
+              ""
+          ) || undefined,
         createdAt: String(data?.createdAt ?? "") || undefined,
         eventId: String(data?.eventId ?? "") || undefined,
         userId: String(data?.userId ?? "") || undefined,

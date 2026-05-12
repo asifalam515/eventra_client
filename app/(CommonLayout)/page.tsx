@@ -6,12 +6,14 @@ import HomeEventsSlider, {
 } from "@/components/ui/home-events-slider"
 import PlatformReviewsSection from "@/components/ui/platform-reviews-section"
 import UpcomingEventsSection from "@/components/ui/upcoming-events-section"
+import { ScrollReveal } from "@/components/ui/scroll-reveal"
 import {
   CalendarDays,
   CreditCard,
   ShieldCheck,
   Sparkles,
   Users,
+  ArrowRight,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -178,117 +180,160 @@ const page = async () => {
   ]
 
   return (
-    <div className="space-y-12">
-      <HeroSection />
+    <div className="flex flex-col min-h-screen">
+      {/* Hero Section */}
+      <div className="relative isolate px-6 pt-14 lg:px-8">
+        <HeroSection />
+      </div>
 
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              Ask the AI Event Assistant
-            </h2>
-            <p className="mt-1 text-muted-foreground">
-              Get personalized recommendations based on live event data.
-            </p>
-          </div>
-        </div>
-
-        <ChatAssistant />
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              Featured Events on Home
-            </h2>
-            <p className="mt-1 text-muted-foreground">
-              Swipe through upcoming public events directly from the homepage.
-            </p>
-          </div>
-
-          <Link
-            href="/events"
-            className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
-          >
-            View all events
-          </Link>
-        </div>
-
-        <HomeEventsSlider events={eventList} />
-        <CallToAction></CallToAction>
-      </section>
-
-      <UpcomingEventsSection />
-      <PlatformReviewsSection />
-
-      <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-linear-to-br from-amber-50/90 via-background to-cyan-50/80 p-6 shadow-[0_18px_60px_-28px_rgba(0,0,0,0.45)] sm:p-8 lg:p-10">
-        <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-amber-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-16 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl" />
-
-        <div className="relative flex flex-col gap-6">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="space-y-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-100/70 px-3 py-1 text-xs font-semibold tracking-widest text-amber-700 uppercase">
-                <Sparkles className="h-3.5 w-3.5" />
-                Eventra Services
-              </span>
-              <div>
-                <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                  Built-in services for premium event journeys
+      <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-32 pb-32">
+        {/* Featured Events Section */}
+        <ScrollReveal>
+          <section className="relative mt-24">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+              <div className="max-w-2xl">
+                <h2 className="text-4xl font-semibold tracking-tight text-foreground text-balance">
+                  Trending experiences
                 </h2>
-                <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
-                  From discovery to payment and participation, every flow is
-                  connected to live data in your event ecosystem.
+                <p className="mt-4 text-lg text-muted-foreground text-balance">
+                  Discover the most highly anticipated events happening around you.
+                </p>
+              </div>
+              <Link
+                href="/events"
+                className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors"
+              >
+                Explore all events
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+            <div className="mx-auto w-full">
+              <HomeEventsSlider events={eventList} />
+            </div>
+          </section>
+        </ScrollReveal>
+
+        {/* AI Assistant Section */}
+        <ScrollReveal>
+          <section className="space-y-6">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                  Ask the AI Event Assistant
+                </h2>
+                <p className="mt-1 text-muted-foreground">
+                  Get personalized recommendations based on live event data.
                 </p>
               </div>
             </div>
 
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:opacity-90"
-            >
-              Explore dashboard services
-            </Link>
-          </div>
+            <ChatAssistant />
+          </section>
+        </ScrollReveal>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {serviceCards.map((service) => {
-              const Icon = service.icon
+        {/* Services Bento Grid */}
+        <ScrollReveal>
+          <section className="relative">
+            <div className="mb-16 text-center max-w-3xl mx-auto">
+              <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground text-balance mb-6">
+                Everything you need to host and attend
+              </h2>
+              <p className="text-lg text-muted-foreground text-balance">
+                A complete toolkit designed for modern event organizers and passionate attendees.
+              </p>
+            </div>
 
-              return (
-                <Link
-                  key={service.title}
-                  href={service.href}
-                  className="group rounded-2xl border border-border/70 bg-background/80 p-5 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-xl"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-                        Service
-                      </p>
-                      <h3 className="mt-1 text-xl font-semibold text-foreground">
-                        {service.title}
-                      </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {serviceCards.map((service, idx) => {
+                const Icon = service.icon
+                return (
+                  <Link
+                    key={service.title}
+                    href={service.href}
+                    className={`group relative overflow-hidden rounded-3xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 p-8 transition-all duration-300 hover:shadow-xl hover:shadow-zinc-200/20 dark:hover:shadow-black/40 hover:-translate-y-1 ${idx === 0 || idx === 3 ? "lg:col-span-2" : "lg:col-span-1"}`}
+                  >
+                    <div className="mb-6 inline-flex size-12 items-center justify-center rounded-2xl bg-white dark:bg-zinc-800 shadow-sm border border-zinc-100 dark:border-zinc-700">
+                      <Icon className="size-6 text-foreground" />
                     </div>
-                    <span className="rounded-lg border border-border/80 bg-secondary/60 p-2 text-foreground transition group-hover:scale-105">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                  </div>
+                    <h3 className="mb-3 text-2xl font-semibold text-foreground">
+                      {service.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed mb-8">
+                      {service.description}
+                    </p>
+                    <div className="absolute bottom-8 left-8 right-8 flex items-center justify-between">
+                      <span className="text-sm font-medium text-primary">
+                        {service.metric}
+                      </span>
+                      <div className="size-8 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0 bg-white dark:bg-zinc-800">
+                        <ArrowRight className="size-4" />
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        </ScrollReveal>
 
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    {service.description}
-                  </p>
+        {/* Upcoming List Section */}
+        <ScrollReveal>
+          <section className="space-y-6">
+            <UpcomingEventsSection />
+          </section>
+        </ScrollReveal>
 
-                  <p className="mt-5 inline-flex rounded-lg border border-cyan-400/40 bg-cyan-100/70 px-3 py-1 text-sm font-semibold text-cyan-800">
-                    {service.metric}
-                  </p>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-      </section>
+        {/* Reviews Section */}
+        <ScrollReveal>
+          <section className="space-y-6">
+            <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                  What people say
+                </h2>
+                <p className="mt-1 text-muted-foreground">
+                  Hear from our vibrant community of hosts and attendees.
+                </p>
+              </div>
+            </div>
+            <PlatformReviewsSection />
+          </section>
+        </ScrollReveal>
+
+        {/* CTA Section */}
+        <ScrollReveal>
+          <section className="relative">
+            <div className="relative overflow-hidden rounded-[3rem] bg-zinc-900 px-6 py-24 sm:px-16 sm:py-32 lg:px-24 text-center shadow-2xl">
+              {/* Ambient Background */}
+              <div className="absolute inset-0 bg-linear-to-br from-primary/30 via-indigo-900/40 to-black/80 z-10" />
+              <div className="absolute inset-0 opacity-20 mix-blend-overlay">
+                 <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary rounded-full blur-[128px]" />
+                 <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[128px]" />
+              </div>
+
+              <div className="relative z-20">
+                <h2 className="mx-auto max-w-2xl text-4xl font-bold tracking-tight text-white sm:text-5xl text-balance">
+                  Ready to create your next unforgettable experience?
+                </h2>
+                <p className="mx-auto mt-6 max-w-xl text-lg text-zinc-300 text-balance">
+                  Join thousands of organizers and attendees on the most elegant event platform.
+                </p>
+                <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
+                  <Link
+                    href="/create-event"
+                    className="rounded-full bg-white px-8 py-4 text-sm font-bold text-zinc-900 shadow-xl hover:bg-zinc-100 hover:scale-105 transition-all duration-300"
+                  >
+                    Create Event Now
+                  </Link>
+                  <Link href="/events" className="text-sm font-semibold leading-6 text-white flex items-center gap-2 group hover:text-zinc-300 transition-colors">
+                    Explore Events <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+        </ScrollReveal>
+      </main>
     </div>
   )
 }

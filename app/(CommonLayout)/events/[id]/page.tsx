@@ -1,6 +1,7 @@
 import { getParticipationsByEventIdAction } from "@/actions/participation"
 import { getEventReviewsByEventIdAction } from "@/actions/review"
 import DeleteEventButton from "@/components/CommoneComponents/Event/deleteEventButton"
+import EventInvoiceActions from "@/components/CommoneComponents/Event/event-invoice-actions"
 import EventReviewsSection from "@/components/CommoneComponents/Event/event-reviews-section"
 import InvitationSendForm from "@/components/CommoneComponents/Event/invitation-send-form"
 import JoinEventButton from "@/components/CommoneComponents/Event/joinEventButton"
@@ -11,12 +12,14 @@ import { Button } from "@/components/ui/button"
 import jwt, { JwtPayload } from "jsonwebtoken"
 import {
   Calendar,
+  CheckCircle2,
   Clock,
   DollarSign,
   MapPin,
   Star,
   Tag,
   Users,
+  ShieldCheck,
 } from "lucide-react"
 import { cookies } from "next/headers"
 import Link from "next/link"
@@ -240,6 +243,15 @@ export default async function Page({
         item.status?.trim().toUpperCase() === "APPROVED"
     )
   )
+  const currentUserParticipation = participations.find(
+    (item) => item.userId === currentUserId
+  )
+  const currentUserPaymentStatus =
+    currentUserParticipation?.payment?.trim().toUpperCase() || ""
+  const hasPaidForEvent = Boolean(
+    currentUserParticipation &&
+    (currentUserPaymentStatus === "PAID" || currentUserParticipation.paymentId)
+  )
   const eventPath = `/events/${event.id}`
   const loginForEventHref = `/login?redirect=${encodeURIComponent(eventPath)}`
   const dashboardHref = isAuthenticated
@@ -247,170 +259,188 @@ export default async function Page({
     : "/login?redirect=%2Fdashboard"
 
   return (
-    <section className="w-full">
-      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/70 p-6 shadow-sm sm:p-8">
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-transparent" />
+    <section className="w-full bg-zinc-50 dark:bg-zinc-950 min-h-screen pb-24">
+      {/* Ambient Hero Banner */}
+      <div className="relative h-64 md:h-80 lg:h-96 w-full overflow-hidden bg-zinc-900">
+        <div className="absolute inset-0 bg-linear-to-br from-primary/30 via-indigo-900/40 to-black/80 z-10" />
+        <div className="absolute inset-0 opacity-20 mix-blend-overlay">
+           {/* We would put an event cover image here, but since we don't have one, we use an elegant noise/mesh pattern */}
+           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[128px]" />
+           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500 rounded-full blur-[128px]" />
+        </div>
+        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent z-20" />
+      </div>
 
-        <div className="relative">
-          <div className="mb-5 flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${status.color}`}
-            >
-              {status.label}
-            </span>
-            {event.type && (
-              <span className="rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs font-medium text-foreground">
-                {event.type}
-              </span>
-            )}
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 relative z-30 -mt-20 md:-mt-32">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+          
+          {/* Left Column: Main Details */}
+          <div className="flex-1 w-full space-y-8">
+            <div className="rounded-[2rem] border border-zinc-200/60 dark:border-zinc-800/60 bg-white/80 dark:bg-zinc-900/80 p-6 sm:p-10 shadow-sm backdrop-blur-xl">
+              <div className="mb-6 flex flex-wrap items-center gap-3">
+                <span
+                  className={`rounded-full border px-4 py-1.5 text-xs font-semibold tracking-wide uppercase ${status.color}`}
+                >
+                  {status.label}
+                </span>
+                {event.type && (
+                  <span className="rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800/50 px-4 py-1.5 text-xs font-semibold tracking-wide uppercase text-foreground">
+                    {event.type}
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground text-balance">
+                {event.name}
+              </h1>
+
+              <div className="mt-8 flex flex-col gap-6 border-y border-zinc-200/60 dark:border-zinc-800/60 py-8">
+                 <div className="flex items-center gap-4">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 text-foreground">
+                       <Calendar className="size-5" />
+                    </div>
+                    <div>
+                       <p className="text-sm font-medium text-foreground">{formatDate(event.date)}</p>
+                       <p className="text-sm text-muted-foreground">{event.time || "Time to be announced"}</p>
+                    </div>
+                 </div>
+                 
+                 <div className="flex items-center gap-4">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 text-foreground">
+                       <MapPin className="size-5" />
+                    </div>
+                    <div>
+                       <p className="text-sm font-medium text-foreground">{event.venue || "Location not specified"}</p>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="mt-8">
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground mb-4">About this event</h2>
+                <p className="max-w-3xl leading-relaxed text-muted-foreground text-lg whitespace-pre-wrap">
+                  {event.description}
+                </p>
+              </div>
+            </div>
+
+            {/* Participants Section */}
+            <ParticipantsList
+              eventId={event.id}
+              canManage={canManage}
+              initialParticipations={participations}
+            />
+
+            {/* Reviews Section */}
+            <div className="rounded-[2rem] border border-zinc-200/60 dark:border-zinc-800/60 bg-white/80 dark:bg-zinc-900/80 p-6 sm:p-10 shadow-sm backdrop-blur-xl">
+              <EventReviewsSection
+                reviews={reviewsResult.data}
+                currentUserId={currentUserId}
+                currentUserRole={currentUserRole}
+              />
+
+              {event.eventStatus === "completed" && isApprovedParticipant && (
+                <div className="mt-8 border-t border-zinc-200/60 dark:border-zinc-800/60 pt-8">
+                  <h3 className="text-xl font-semibold tracking-tight text-foreground mb-4">Leave a Review</h3>
+                  <ReviewForm eventId={event.id} />
+                </div>
+              )}
+
+              {event.eventStatus === "completed" && !isApprovedParticipant && (
+                <div className="mt-8 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-6 text-center text-sm text-muted-foreground">
+                  Only approved participants of this completed event can submit a review.
+                </div>
+              )}
+            </div>
+
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            {event.name}
-          </h1>
-
-          <p className="mt-4 max-w-3xl leading-relaxed text-muted-foreground">
-            {event.description}
-          </p>
-
-          <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-xl border border-border/60 bg-background/70 p-3">
-              <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground uppercase">
-                <Calendar className="size-3.5" />
-                Date
+          {/* Right Column: Sticky Ticket Action Card */}
+          <div className="w-full lg:w-96 shrink-0 lg:sticky lg:top-24 space-y-6">
+            <div className="rounded-[2rem] border border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-950 p-6 shadow-xl shadow-zinc-200/40 dark:shadow-black/40">
+              <div className="mb-6 text-center">
+                 <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-1">Ticket Price</p>
+                 <p className="text-4xl font-bold tracking-tight text-foreground">{formatFee(event.fee)}</p>
               </div>
-              <p className="text-sm font-medium text-foreground">
-                {formatDate(event.date)}
-              </p>
-            </div>
 
-            <div className="rounded-xl border border-border/60 bg-background/70 p-3">
-              <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground uppercase">
-                <Clock className="size-3.5" />
-                Time
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                {event.time || "To be announced"}
-              </p>
-            </div>
+              <div className="space-y-4">
+                {isPaidEvent ? (
+                  isAuthenticated ? (
+                    hasPaidForEvent ? (
+                      <Button variant="secondary" className="w-full h-14 rounded-2xl text-base" disabled>
+                        <CheckCircle2 className="size-5 mr-2" /> Already Paid
+                      </Button>
+                    ) : (
+                      <div className="w-full [&>button]:h-14 [&>button]:w-full [&>button]:rounded-2xl [&>button]:text-base">
+                         <PaidEventCheckoutButton
+                           eventId={event.id}
+                           amountLabel={formatFee(event.fee)}
+                         />
+                      </div>
+                    )
+                  ) : (
+                    <Button asChild className="w-full h-14 rounded-2xl text-base bg-primary hover:bg-primary/90 text-primary-foreground">
+                      <Link href={loginForEventHref}>
+                        <DollarSign className="size-5 mr-2" /> Pay {formatFee(event.fee)}
+                      </Link>
+                    </Button>
+                  )
+                ) : isAuthenticated ? (
+                  <div className="w-full [&>button]:h-14 [&>button]:w-full [&>button]:rounded-2xl [&>button]:text-base [&>button]:bg-foreground [&>button]:text-background hover:[&>button]:bg-foreground/90">
+                     <JoinEventButton eventId={event.id} />
+                  </div>
+                ) : (
+                  <Button asChild className="w-full h-14 rounded-2xl text-base bg-foreground hover:bg-foreground/90 text-background">
+                    <Link href={loginForEventHref}>
+                      <Users className="size-5 mr-2" /> Join Event
+                    </Link>
+                  </Button>
+                )}
 
-            <div className="rounded-xl border border-border/60 bg-background/70 p-3">
-              <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground uppercase">
-                <MapPin className="size-3.5" />
-                Venue
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                {event.venue || "Location not specified"}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-border/60 bg-background/70 p-3">
-              <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground uppercase">
-                <DollarSign className="size-3.5" />
-                Fee
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                {formatFee(event.fee)}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-border/60 bg-background/70 p-3">
-              <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground uppercase">
-                <Users className="size-3.5" />
-                Attendees
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                {participations.length || event.attendees || 0}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-border/60 bg-background/70 p-3">
-              <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground uppercase">
-                <Star className="size-3.5" />
-                Rating
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                {event.review ?? "N/A"}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button asChild>
-              <Link href="/events">Back to Events</Link>
-            </Button>
-
-            {isPaidEvent ? (
-              isAuthenticated ? (
-                <PaidEventCheckoutButton
-                  eventId={event.id}
-                  amountLabel={formatFee(event.fee)}
-                />
-              ) : (
-                <Button asChild>
-                  <Link href={loginForEventHref}>
-                    <DollarSign className="size-4" /> Pay {formatFee(event.fee)}
+                <div className="grid grid-cols-2 gap-3 pt-4">
+                  {canManage && (
+                    <Button asChild variant="outline" className="h-12 rounded-xl">
+                      <Link href={`/events/${event.id}/edit`}>Edit</Link>
+                    </Button>
+                  )}
+                  {canManage && <DeleteEventButton eventId={event.id} />}
+                </div>
+                
+                <Button asChild variant="ghost" className="w-full h-12 rounded-xl text-muted-foreground">
+                  <Link href={dashboardHref}>
+                    View Dashboard
                   </Link>
                 </Button>
-              )
-            ) : isAuthenticated ? (
-              <JoinEventButton eventId={event.id} />
-            ) : (
-              <Button asChild>
-                <Link href={loginForEventHref}>
-                  <Users className="size-4" /> Join Event
-                </Link>
-              </Button>
+              </div>
+
+              <div className="mt-8 flex justify-center">
+                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <Star className="size-4 text-amber-500 fill-amber-500" />
+                    <span>{event.review ? `${event.review} average rating` : "No ratings yet"}</span>
+                    <span className="mx-2 w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                    <Users className="size-4" />
+                    <span>{participations.length || event.attendees || 0} attending</span>
+                 </div>
+              </div>
+            </div>
+
+            {currentUserParticipation && (
+              <div className="rounded-[1.5rem] border border-zinc-200/60 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-900/60 p-5 backdrop-blur-xl">
+                <EventInvoiceActions
+                  participantId={currentUserParticipation.id}
+                  paymentId={currentUserParticipation.paymentId}
+                />
+              </div>
             )}
 
-            {canManage && (
-              <Button asChild variant="secondary">
-                <Link href={`/events/${event.id}/edit`}>Edit Event</Link>
-              </Button>
+            {isEventHost && (
+              <div className="rounded-[1.5rem] border border-primary/20 bg-primary/5 p-5">
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                   <ShieldCheck className="size-4 text-primary" /> Host Tools
+                </h3>
+                <InvitationSendForm eventId={event.id} />
+              </div>
             )}
-
-            {canManage && <DeleteEventButton eventId={event.id} />}
-
-            <Button asChild variant="outline">
-              <Link href={dashboardHref}>
-                <Tag className="size-4" />
-                View Dashboard
-              </Link>
-            </Button>
           </div>
-
-          <ParticipantsList
-            eventId={event.id}
-            canManage={canManage}
-            initialParticipations={participations}
-          />
-
-          {isEventHost && (
-            <div className="mt-6">
-              <InvitationSendForm eventId={event.id} />
-            </div>
-          )}
-
-          <div className="mt-6">
-            <EventReviewsSection
-              reviews={reviewsResult.data}
-              currentUserId={currentUserId}
-              currentUserRole={currentUserRole}
-            />
-          </div>
-
-          {event.eventStatus === "completed" && isApprovedParticipant && (
-            <div className="mt-6">
-              <ReviewForm eventId={event.id} />
-            </div>
-          )}
-
-          {event.eventStatus === "completed" && !isApprovedParticipant && (
-            <div className="mt-6 rounded-2xl border border-border/70 bg-card/80 p-5 text-sm text-muted-foreground shadow-sm backdrop-blur">
-              Only approved participants of this completed event can submit a
-              review.
-            </div>
-          )}
         </div>
       </div>
     </section>

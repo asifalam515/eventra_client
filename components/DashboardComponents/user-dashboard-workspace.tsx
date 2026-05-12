@@ -5,12 +5,28 @@ import type { MyInvitation } from "@/actions/invitation"
 import MyInvitationsPanel from "@/components/CommoneComponents/Dashboard/my-invitations-panel"
 import ProfileCard from "@/components/CommoneComponents/Dashboard/ProfileCard"
 import UserEventParticipantsManager from "@/components/CommoneComponents/Dashboard/user-event-participants-manager"
+import UserInvoicesPanel from "@/components/CommoneComponents/Dashboard/user-invoices-panel"
 import UserMyEventsPanel from "@/components/CommoneComponents/Dashboard/user-my-events-panel"
 import { useUserContext } from "@/components/providers/user-provider"
-import { Calendar, History, Menu, User, UserCheck, X } from "lucide-react"
+import {
+  Calendar,
+  CreditCard,
+  FileText,
+  History,
+  Menu,
+  User,
+  UserCheck,
+  X,
+} from "lucide-react"
 import { useMemo, useState } from "react"
 
-type Section = "events" | "participants" | "invitations" | "profile"
+type Section =
+  | "events"
+  | "participants"
+  | "registrations"
+  | "payments"
+  | "invitations"
+  | "profile"
 
 type WorkspaceProps = {
   initialEvents: Event[]
@@ -34,6 +50,18 @@ const sectionItems: Array<{
     label: "Manage Participants",
     icon: UserCheck,
     description: "Review and approve/reject join requests for your events.",
+  },
+  {
+    id: "registrations",
+    label: "My Registrations",
+    icon: FileText,
+    description: "See events you joined and download registration invoices.",
+  },
+  {
+    id: "payments",
+    label: "Payment History",
+    icon: CreditCard,
+    description: "View completed payments and download payment invoices.",
   },
   {
     id: "invitations",
@@ -65,6 +93,10 @@ export default function UserDashboardWorkspace({
         return <UserMyEventsPanel initialEvents={initialEvents} />
       case "participants":
         return <UserEventParticipantsManager events={initialEvents} />
+      case "registrations":
+        return <UserInvoicesPanel initialView="registrations" />
+      case "payments":
+        return <UserInvoicesPanel initialView="payments" />
       case "invitations":
         return <MyInvitationsPanel initialInvitations={initialInvitations} />
       case "profile":

@@ -87,7 +87,9 @@ export default async function UpcomingEventsSection() {
   )
 
   const payload = await parseJsonSafe(response)
-  const events: UpcomingEvent[] = payload?.data ?? []
+  const events: UpcomingEvent[] = Array.isArray(payload?.data)
+    ? (payload.data as UpcomingEvent[]).slice(0, 3)
+    : []
 
   return (
     <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-linear-to-br from-cyan-50/80 via-background to-amber-50/70 p-6 shadow-[0_18px_65px_-30px_rgba(0,0,0,0.4)] sm:p-8 lg:p-10">
@@ -142,9 +144,9 @@ export default async function UpcomingEventsSection() {
               return (
                 <article
                   key={eventId}
-                  className="group relative rounded-2xl border border-border/70 bg-background/85 p-5 backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-cyan-300/70 hover:shadow-2xl"
+                  className="group relative rounded-2xl border border-border/70 bg-background/85 p-5 backdrop-blur transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_25px_50px_-12px_rgba(79,70,229,0.15)]"
                 >
-                  <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-cyan-500/0 via-cyan-500/0 to-amber-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
                   <div className="relative space-y-4">
                     <div className="flex items-start justify-between gap-3">

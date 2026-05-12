@@ -7,6 +7,8 @@ import { cookies } from "next/headers"
 export type JoinParticipationState = {
   status: "idle" | "success" | "error"
   message: string
+  participantId?: string
+  paymentId?: string
 }
 
 export type UpdateParticipationStatusState = {
@@ -26,6 +28,8 @@ export type EventParticipation = {
   eventId?: string
   userId?: string
   status?: string
+  payment?: string
+  paymentId?: string
   createdAt?: string
   userName?: string
   userEmail?: string
@@ -56,6 +60,16 @@ function normalizeParticipation(
       ) || undefined,
     status:
       String(payload.status ?? payload.participationStatus ?? "") || undefined,
+    payment:
+      String(payload.payment ?? payload.paymentStatus ?? "") || undefined,
+    paymentId:
+      String(
+        payload.paymentId ??
+          payload.transactionId ??
+          payload.paymentIntentId ??
+          payload.stripePaymentId ??
+          ""
+      ) || undefined,
     createdAt: String(payload.createdAt ?? payload.joinedAt ?? "") || undefined,
     userName:
       String(
@@ -170,9 +184,37 @@ export async function joinParticipationAction(
       }
     }
 
+    let responseBody: Record<string, unknown> = {}
+
+    try {
+      responseBody = (await response.json()) as Record<string, unknown>
+    } catch {
+      // Ignore parsing errors and keep fallback success message.
+    }
+
+    const data =
+      (responseBody?.data as Record<string, unknown> | undefined) ??
+      responseBody
+
+    const participantId =
+      String(data?.id ?? data?._id ?? data?.participantId ?? "") || undefined
+
+    const paymentId =
+      String(
+        data?.paymentId ??
+          data?.transactionId ??
+          data?.paymentIntentId ??
+          data?.stripePaymentId ??
+          ""
+      ) || undefined
+
     return {
       status: "success",
-      message: "Join request sent successfully.",
+      message: String(
+        responseBody?.message ?? "Join request sent successfully."
+      ),
+      participantId,
+      paymentId,
     }
   } catch (error: unknown) {
     return {

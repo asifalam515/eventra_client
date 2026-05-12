@@ -5,6 +5,7 @@ import {
   joinParticipationAction,
 } from "@/actions/participation"
 import { Button } from "@/components/ui/button"
+import InvoiceDownloadButton from "@/components/ui/invoice-download-button"
 import { AlertCircle, CheckCircle2, UserPlus, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useActionState, useEffect, useState } from "react"
@@ -93,6 +94,19 @@ export default function JoinEventButton({ eventId }: { eventId: string }) {
                 <X className="size-4" />
               </button>
             </div>
+
+            {state.status === "success" && state.participantId ? (
+              <div className="px-4 pb-3">
+                <InvoiceDownloadButton
+                  kind="participant"
+                  id={state.participantId}
+                  label="Download Registration Invoice"
+                  size="sm"
+                  variant="outline"
+                  className="w-full border-emerald-300 bg-white/70 text-emerald-800 hover:bg-white"
+                />
+              </div>
+            ) : null}
 
             <div className="h-1 w-full bg-current/20">
               <div

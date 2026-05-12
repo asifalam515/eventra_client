@@ -148,9 +148,11 @@ export async function HeroSection() {
     : `/login?redirect=${encodeURIComponent(eventPath)}`
 
   return (
-    <section className="relative overflow-hidden bg-background pt-24 pb-16 md:pt-32 md:pb-24">
-      {/* Premium SaaS Background Glow */}
-      <div className="absolute inset-0 -z-10 h-full w-full bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div>
+    <section className="relative overflow-hidden bg-background pt-24 pb-16 md:pt-32 md:pb-32">
+      {/* Premium SaaS Background Glow & Grid */}
+      <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
+        <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary opacity-20 blur-[100px]"></div>
+      </div>
 
       {/* Hero Content */}
       <HeroContent featuredEvent={featuredEvent} ctaHref={ctaHref} />

@@ -30,7 +30,9 @@ const page = async ({
   const data = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
     cache: "no-store",
   })
+
   const events = await data.json()
+  console.log("fetched event", events)
   const eventList = (events?.data ?? []).map((event: Event) => ({
     id: event.id,
     name: event.name || event.title,

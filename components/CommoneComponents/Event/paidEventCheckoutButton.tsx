@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import InvoiceDownloadButton from "@/components/ui/invoice-download-button"
 import {
   Elements,
   PaymentElement,
@@ -35,6 +36,8 @@ const stripePromise = stripePublishableKey
 type ToastState = {
   type: "success" | "error"
   message: string
+  paymentId?: string
+  participantId?: string
 }
 
 type PaymentStage =
@@ -91,7 +94,11 @@ function PaymentForm({
   userName?: string
   userEmail?: string
   fallbackTransactionId?: string
-  onSuccess: (message: string) => void
+  onSuccess: (payload: {
+    message: string
+    paymentId?: string
+    participantId?: string
+  }) => void
   onStageChange: (stage: PaymentStage) => void
 }) {
   const stripe = useStripe()
@@ -133,6 +140,7 @@ function PaymentForm({
 
       const transactionId =
         result.paymentIntent?.id || fallbackTransactionId || ""
+      let confirmedPaymentId = transactionId
 
       if (!transactionId) {
         onStageChange("failed")
@@ -171,6 +179,7 @@ function PaymentForm({
 
         const nextTransactionId =
           nextAction.paymentIntent?.id || transactionId || ""
+        confirmedPaymentId = nextTransactionId || confirmedPaymentId
 
         if (!nextTransactionId) {
           onStageChange("failed")
@@ -196,6 +205,7 @@ function PaymentForm({
         return
       }
 
+      onStageChange("approving_participation")
       const joinResult = await joinParticipationByEventIdAction(eventId)
       if (!joinResult.status || joinResult.status !== "success") {
         onStageChange("failed")
@@ -206,9 +216,12 @@ function PaymentForm({
       }
 
       onStageChange("completed")
-      onSuccess(
-        "Payment successful! Your join request has been sent. Please wait for the event organizer to approve your participation."
-      )
+      onSuccess({
+        message:
+          "Payment successful! Your join request has been sent. Please wait for the event organizer to approve your participation.",
+        paymentId: joinResult.paymentId || confirmedPaymentId,
+        participantId: joinResult.participantId,
+      })
     } catch (submitError: unknown) {
       onStageChange("failed")
       setError(
@@ -309,8 +322,17 @@ export default function PaidEventCheckoutButton({
     return () => clearTimeout(timer)
   }, [toast])
 
-  const handleSuccess = (message: string) => {
-    setToast({ type: "success", message })
+  const handleSuccess = (payload: {
+    message: string
+    paymentId?: string
+    participantId?: string
+  }) => {
+    setToast({
+      type: "success",
+      message: payload.message,
+      paymentId: payload.paymentId,
+      participantId: payload.participantId,
+    })
     setOpen(false)
     router.refresh()
   }
@@ -325,7 +347,32 @@ export default function PaidEventCheckoutButton({
               : "border-red-200 bg-red-50 text-red-800"
           }`}
         >
-          {toast.message}
+          <p>{toast.message}</p>
+
+          {toast.type === "success" &&
+          (toast.paymentId || toast.participantId) ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {toast.paymentId ? (
+                <InvoiceDownloadButton
+                  kind="payment"
+                  id={toast.paymentId}
+                  label="Payment Invoice"
+                  variant="outline"
+                  className="border-emerald-300 bg-white/80 text-emerald-800 hover:bg-white"
+                />
+              ) : null}
+
+              {toast.participantId ? (
+                <InvoiceDownloadButton
+                  kind="participant"
+                  id={toast.participantId}
+                  label="Registration Invoice"
+                  variant="outline"
+                  className="border-emerald-300 bg-white/80 text-emerald-800 hover:bg-white"
+                />
+              ) : null}
+            </div>
+          ) : null}
         </div>
       )}
 

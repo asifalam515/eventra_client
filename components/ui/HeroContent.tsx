@@ -34,11 +34,12 @@ const HeroContent = ({ featuredEvent, ctaHref }: HeroContentProps) => {
   }
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30, filter: "blur(12px)" },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
+      filter: "blur(0px)",
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
     },
   }
 
@@ -127,33 +128,37 @@ const HeroContent = ({ featuredEvent, ctaHref }: HeroContentProps) => {
       {/* Bottom Details / Stats (Replaces the generic downloads/components stats) */}
       <motion.div
         variants={itemVariants}
-        className="mt-16 grid w-full max-w-4xl grid-cols-2 gap-8 rounded-2xl border border-border/50 bg-muted/20 p-8 backdrop-blur-md md:grid-cols-4"
+        className="mt-20 grid w-full max-w-5xl grid-cols-2 gap-6 md:grid-cols-4"
       >
-        <div className="flex flex-col items-center justify-center gap-1">
-          <Users className="mb-2 h-5 w-5 text-primary" />
-          <div className="text-xl font-bold text-foreground">
+        <div className="glass-card flex flex-col items-center justify-center gap-2 rounded-3xl p-8">
+          <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Users className="h-6 w-6" />
+          </div>
+          <div className="text-2xl font-bold text-foreground">
             {featuredEvent.attendeesLabel}
           </div>
-          <div className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+          <div className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             Expected
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-1">
-          <Ticket className="mb-2 h-5 w-5 text-primary" />
-          <div className="text-xl font-bold text-foreground">
+        <div className="glass-card flex flex-col items-center justify-center gap-2 rounded-3xl p-8">
+          <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Ticket className="h-6 w-6" />
+          </div>
+          <div className="text-2xl font-bold text-foreground">
             {featuredEvent.priceLabel}
           </div>
-          <div className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+          <div className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {featuredEvent.feeLabel}
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-1 text-center md:col-span-2">
-          <div className="mb-1 text-sm text-muted-foreground">Organized by</div>
-          <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-xs text-primary">
-              EO
+        <div className="glass-card flex flex-col items-center justify-center gap-3 rounded-3xl p-8 text-center md:col-span-2">
+          <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Organized by</div>
+          <div className="flex items-center gap-3 text-xl font-bold text-foreground">
+            <div className="flex size-10 items-center justify-center rounded-full bg-primary/20 text-sm text-primary shadow-inner">
+              {featuredEvent.organizer.slice(0, 2).toUpperCase()}
             </div>
             {featuredEvent.organizer}
           </div>

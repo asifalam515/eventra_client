@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import InvoiceDownloadButton from "@/components/ui/invoice-download-button"
 import {
   Elements,
   PaymentElement,
@@ -549,6 +550,26 @@ export default function MyInvitationsPanel({
                     This invitation is no longer actionable.
                   </p>
                 )}
+
+                {invitation.participantId || invitation.paymentId ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {invitation.participantId ? (
+                      <InvoiceDownloadButton
+                        kind="participant"
+                        id={invitation.participantId}
+                        label="Registration Invoice"
+                      />
+                    ) : null}
+
+                    {invitation.paymentId ? (
+                      <InvoiceDownloadButton
+                        kind="payment"
+                        id={invitation.paymentId}
+                        label="Payment Invoice"
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
               </article>
             )
           })}
